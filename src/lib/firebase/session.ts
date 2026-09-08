@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getTokens, type Tokens } from "next-firebase-auth-edge";
 import type { Role } from "@/types/user";
-import { authConfig } from "./auth-config";
+import { getAuthConfig } from "./auth-config";
 
 export type { Role };
 
@@ -37,11 +37,15 @@ function toSessionUser(tokens: Tokens): SessionUser {
 
 /** The current user, or null. Memoized per request. */
 export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
-  const tokens = await getTokens(await cookies(), {
-    apiKey: authConfig.apiKey,
-    cookieName: authConfig.cookieName,
-    cookieSignatureKeys: authConfig.cookieSignatureKeys,
-    serviceAccount: authConfig.serviceAccount,
+  // Read cookies first: during a prerender pass this emits the "dynamic" signal
+  // so the route opts out of static generation before any env is touched.
+  const cookieStore = await cookies();
+  const config = getAuthConfig();
+  const tokens = await getTokens(cookieStore, {
+    apiKey: config.apiKey,
+    cookieName: config.cookieName,
+    cookieSignatureKeys: config.cookieSignatureKeys,
+    serviceAccount: config.serviceAccount,
   });
   return tokens ? toSessionUser(tokens) : null;
 });

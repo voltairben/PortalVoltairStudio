@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { refreshNextResponseCookiesWithToken } from "next-firebase-auth-edge/next/cookies";
-import { authConfig } from "@/lib/firebase/auth-config";
+import { getAuthConfig } from "@/lib/firebase/auth-config";
 
 /**
  * Forces the __session cookie to be re-minted from a fresh client ID token.
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   try {
     const response = NextResponse.json({ refreshed: true });
-    return await refreshNextResponseCookiesWithToken(idToken, request, response, authConfig);
+    return await refreshNextResponseCookiesWithToken(idToken, request, response, getAuthConfig());
   } catch (error) {
     console.error("[refresh-token]", error);
     return NextResponse.json({ error: "Token refresh failed" }, { status: 401 });
