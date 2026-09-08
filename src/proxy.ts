@@ -11,13 +11,14 @@
  */
 import { type NextRequest, NextResponse } from "next/server";
 import { authMiddleware, redirectToLogin } from "next-firebase-auth-edge";
-import { authConfig, LOGIN_PATH, LOGOUT_PATH, PUBLIC_PATHS, REFRESH_TOKEN_PATH } from "@/lib/firebase/auth-config";
+import { authConfig, LOGIN_PATH, LOGOUT_PATH, PUBLIC_PATHS } from "@/lib/firebase/auth-config";
 
 export async function proxy(request: NextRequest) {
   return authMiddleware(request, {
     loginPath: LOGIN_PATH,
     logoutPath: LOGOUT_PATH,
-    refreshTokenPath: REFRESH_TOKEN_PATH,
+    // /api/refresh-token is handled by its own Route Handler (forced refresh
+    // from a client Bearer token), not by the middleware's cookie-only path.
     ...authConfig,
     handleValidToken: async (_tokens, headers) => {
       return NextResponse.next({ request: { headers } });

@@ -1,0 +1,29 @@
+rules_version = '2';
+
+// Voltair Studio Portal — Storage rules.
+// Files live under tenant-scoped folders: /clients/{clientId}/...
+// Clients read only their own folder; only admins write.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+    function isClientOf(clientId) {
+      return isSignedIn()
+        && request.auth.token.role == 'client'
+        && request.auth.token.clientId == clientId;
+    }
+
+    match /clients/{clientId}/{allPaths=**} {
+      allow read: if isAdmin() || isClientOf(clientId);
+      allow write: if isAdmin();
+    }
+
+    // Everything outside a tenant folder is denied by default.
+  }
+}

@@ -11,7 +11,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { auth } from "./client";
-import { LOGIN_PATH, LOGOUT_PATH } from "./auth-paths";
+import { LOGIN_PATH, LOGOUT_PATH, REFRESH_TOKEN_PATH } from "./auth-paths";
 
 async function exchangeIdTokenForSession(idToken: string): Promise<void> {
   const res = await fetch(LOGIN_PATH, {
@@ -33,6 +33,21 @@ export async function signInWithGoogle(): Promise<void> {
   provider.setCustomParameters({ prompt: "select_account" });
   const cred = await signInWithPopup(auth, provider);
   await exchangeIdTokenForSession(await cred.user.getIdToken());
+}
+
+/**
+ * Force the browser's Firebase token to pick up freshly-changed custom claims
+ * (e.g. right after an admin provisions this account), then sync the server
+ * __session cookie — no logout/login needed.
+ */
+export async function refreshClaims(): Promise<void> {
+  const user = auth.currentUser;
+  if (!user) return;
+  const idToken = await user.getIdToken(true);
+  await fetch(REFRESH_TOKEN_PATH, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${idToken}` },
+  });
 }
 
 export async function signOutEverywhere(): Promise<void> {

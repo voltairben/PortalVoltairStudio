@@ -7,9 +7,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { cache } from "react";
 import { getTokens, type Tokens } from "next-firebase-auth-edge";
+import type { Role } from "@/types/user";
 import { authConfig } from "./auth-config";
 
-export type Role = "admin" | "client";
+export type { Role };
 
 export interface SessionUser {
   uid: string;

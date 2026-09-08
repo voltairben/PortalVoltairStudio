@@ -8,10 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "typecheck:tests": "tsc --noEmit -p firebase/tsconfig.json",
     "emulators": "firebase emulators:start",
     "emulators:auth": "firebase emulators:start --only auth",
     "seed": "node --env-file=.env.local firebase/seed/seed.mjs",
     "test": "vitest run",
+    "test:rules": "firebase emulators:exec --only auth,firestore,storage \"vitest run --project firebase\"",
+    "test:email": "node scripts/run-live-email-test.mjs",
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {

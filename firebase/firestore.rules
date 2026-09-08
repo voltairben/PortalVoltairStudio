@@ -1,0 +1,85 @@
+rules_version = '2';
+
+// Voltair Studio Portal — multi-tenant Firestore rules.
+//
+// Tenant isolation is enforced by an O(1) equality check against a `clientId`
+// field DENORMALIZED onto every client-facing document. Rules never call get()
+// or read another document — no recursive fetches, no path joins.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---- helpers ---------------------------------------------------------
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+
+    function isClientOf(clientId) {
+      return isSignedIn()
+        && request.auth.token.role == 'client'
+        && request.auth.token.clientId == clientId;
+    }
+
+    // A client-facing document is readable by admins or by the client whose
+    // denormalized clientId matches the caller's custom claim.
+    function canReadTenantDoc() {
+      return isAdmin() || isClientOf(resource.data.clientId);
+    }
+
+    // ---- users ----------------------------------------------------------
+    // Own profile: read + update non-privileged fields. Admins: full access.
+    match /users/{userId} {
+      allow read: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (
+          isSignedIn()
+          && request.auth.uid == userId
+          // a user may never change their own identity / privilege fields
+          && !request.resource.data.diff(resource.data).affectedKeys()
+               .hasAny(['uid', 'email', 'role', 'clientId', 'createdAt'])
+        );
+    }
+
+    // ---- client companies --------------------------------------------------
+    match /clients/{clientId} {
+      allow read: if isAdmin() || isClientOf(clientId);
+      allow write: if isAdmin();
+    }
+
+    // ---- projects --------------------------------------------------------
+    match /projects/{projectId} {
+      allow read: if canReadTenantDoc();
+      allow write: if isAdmin();
+    }
+
+    // ---- deliverables --------------------------------------------------------
+    match /deliverables/{deliverableId} {
+      allow read: if canReadTenantDoc();
+      allow write: if isAdmin();
+    }
+
+    // ---- feedback comments ------------------------------------------------
+    // Clients may add a comment scoped to their own tenant and authored as
+    // themselves. Editing / deleting comments is admin-only.
+    match /comments/{commentId} {
+      allow read: if canReadTenantDoc();
+
+      allow create: if isAdmin()
+        || (
+          isClientOf(request.resource.data.clientId)
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.userRole == 'client'
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 5000
+        );
+
+      allow update, delete: if isAdmin();
+    }
+  }
+}
