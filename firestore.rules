@@ -1,0 +1,24 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.role == 'admin';
+    }
+    function isClientOf(clientId) {
+      return isSignedIn()
+        && request.auth.token.role == 'client'
+        && request.auth.token.clientId == clientId;
+    }
+
+    // Phase 1: no collections are in use yet. Default deny.
+    // Phase 2 replaces this with per-collection tenant rules + Vitest unit tests.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
