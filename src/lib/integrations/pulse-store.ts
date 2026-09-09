@@ -1,19 +1,21 @@
 import "server-only";
 import { adminDb } from "@/lib/firebase/admin";
+import { normalizeRepo } from "@/lib/integrations/repo";
 import { COLLECTIONS, type Project, type ProjectDeployment, type PulseDraft, type PulseEvent } from "@/types";
 
 /**
- * Match a webhook to a Firestore project by its `githubRepo` field ("owner/repo").
- * A linear scan — studio scale is a handful of projects.
- * ponytail: swap for a `where("githubRepo","==",repo)` query if that grows.
+ * Match a webhook to a Firestore project by its `githubRepo` field. Tolerates a
+ * full URL or an `owner/repo` slug on either side. A linear scan — studio scale
+ * is a handful of projects.
+ * ponytail: swap for a normalized-slug field + `where(...)` query if that grows.
  */
 export async function findProjectByRepo(repo: string | null): Promise<Project | null> {
   if (!repo) return null;
-  const target = repo.toLowerCase();
+  const target = normalizeRepo(repo);
   const snap = await adminDb.collection(COLLECTIONS.projects).get();
   for (const doc of snap.docs) {
     const data = doc.data() as Project;
-    if ((data.githubRepo ?? "").toLowerCase() === target) {
+    if (data.githubRepo && normalizeRepo(data.githubRepo) === target) {
       return { ...data, projectId: doc.id };
     }
   }
