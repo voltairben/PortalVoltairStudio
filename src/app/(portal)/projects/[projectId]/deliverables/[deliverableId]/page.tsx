@@ -43,7 +43,9 @@ export default async function DeliverablePage({ params }: { params: Params }) {
 
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <h1 className="text-xl font-semibold text-ink">{deliverable.name}</h1>
-          <span className="tnum font-mono text-[12px] text-ink-subtle">v{deliverable.version}</span>
+          <span className="tnum font-mono text-[12px] text-ink-subtle">
+            {deliverable.versionLabel ?? `v${deliverable.version}`}
+          </span>
           <DeliverableStatusBadge status={deliverable.status} />
         </div>
         <p className="tnum mt-1 text-[12px] text-ink-subtle">

@@ -147,6 +147,35 @@ describe("clients + users documents", () => {
   });
 });
 
+describe("studio activity feed", () => {
+  beforeEach(async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, "activity", "act-1"), {
+        type: "deliverable-approved",
+        clientId: CLIENT_A,
+        clientName: "Alpha Inc",
+        summary: "approved something",
+        createdAt: "2026-01-01T00:00:00.000Z",
+      });
+    });
+  });
+
+  it("admins can read the activity feed", async () => {
+    await assertSucceeds(getDoc(doc(fs(adminCtx()), "activity", "act-1")));
+    await assertSucceeds(getDocs(collection(fs(adminCtx()), "activity")));
+  });
+
+  it("clients cannot read the activity feed", async () => {
+    await assertFails(getDoc(doc(fs(clientCtx(USER_A, CLIENT_A)), "activity", "act-1")));
+  });
+
+  it("nobody can write to the activity feed from a client", async () => {
+    await assertFails(
+      setDoc(doc(fs(adminCtx()), "activity", "act-2"), { type: "x", clientId: CLIENT_A }),
+    );
+  });
+});
+
 describe("Admin — unrestricted across tenants", () => {
   it("reads any client's project, deliverable, comment, company", async () => {
     const db = fs(adminCtx());

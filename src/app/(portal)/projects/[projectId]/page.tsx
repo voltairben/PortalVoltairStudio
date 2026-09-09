@@ -67,8 +67,8 @@ export default async function ProjectPage({ params }: { params: Params }) {
         </section>
 
         <aside className="space-y-4">
-          {project.stagingUrl ? (
-            <StagingPreview url={project.stagingUrl} />
+          {project.vercelPreviewUrl ? (
+            <StagingPreview url={project.vercelPreviewUrl} />
           ) : (
             <div className="rounded-xl border border-dashed border-zinc-800 bg-surface-1/50 p-5 text-center text-[12px] text-ink-subtle">
               A staging preview link will appear here during the build phase.

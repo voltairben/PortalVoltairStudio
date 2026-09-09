@@ -1,6 +1,10 @@
 import "server-only";
 import { Resend } from "resend";
 import { type DecisionEmailArgs, renderDecisionEmail } from "./decision-template";
+import {
+  type DeliverableReadyEmailArgs,
+  renderDeliverableReadyEmail,
+} from "./deliverable-ready-template";
 import { type OnboardingEmailArgs, renderOnboardingEmail } from "./onboarding-template";
 
 let client: Resend | null = null;
@@ -43,6 +47,24 @@ export async function sendStudioDecisionEmail(args: DecisionEmailArgs): Promise<
   if (!to) throw new Error("STUDIO_NOTIFY_EMAIL is not set.");
   const { subject, html, text } = renderDecisionEmail(args);
   const { data, error } = await resend().emails.send({ from: fromAddress(), to, subject, html, text });
+  if (error) {
+    throw new Error(`Resend failed: ${error.name} — ${error.message}`);
+  }
+  return { id: data?.id ?? null };
+}
+
+/** Notifies a client that a new deliverable is ready for review. Throws on Resend error. */
+export async function sendDeliverableReadyEmail(
+  args: DeliverableReadyEmailArgs,
+): Promise<SendResult> {
+  const { subject, html, text } = renderDeliverableReadyEmail(args);
+  const { data, error } = await resend().emails.send({
+    from: fromAddress(),
+    to: args.to,
+    subject,
+    html,
+    text,
+  });
   if (error) {
     throw new Error(`Resend failed: ${error.name} — ${error.message}`);
   }

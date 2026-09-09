@@ -8,7 +8,10 @@ export interface Deliverable {
   name: string;
   fileUrl: string;
   fileType: DeliverableFileType;
+  /** Numeric version for ordering. */
   version: number;
+  /** Free-form label shown to the client, e.g. "v2.1". Falls back to `v{version}`. */
+  versionLabel: string | null;
   status: DeliverableStatus;
   feedbackCount: number;
   /** When the client last approved / requested changes. */

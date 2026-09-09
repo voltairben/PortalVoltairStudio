@@ -6,7 +6,7 @@
 import { randomBytes } from "node:crypto";
 import type { Auth } from "firebase-admin/auth";
 import type { Firestore } from "firebase-admin/firestore";
-import type { ClientCompany, UserProfile } from "@/types";
+import type { Activity, ClientCompany, Project, UserProfile } from "@/types";
 import { COLLECTIONS } from "@/types";
 import type { OnboardingEmailArgs } from "@/lib/email/onboarding-template";
 import { type CreateClientInput, createClientInputSchema } from "@/lib/validation/schemas";
@@ -15,6 +15,8 @@ export interface OnboardDeps {
   auth: Auth;
   db: Firestore;
   sendOnboardingEmail: (args: OnboardingEmailArgs) => Promise<{ id: string | null }>;
+  /** Name of the studio admin performing the onboarding (for the activity feed). */
+  actorName?: string;
   /** Overridable for deterministic tests. */
   now?: () => Date;
   generatePassword?: () => string;
@@ -25,6 +27,7 @@ export interface OnboardResult {
   clientId: string;
   uid: string;
   tempPassword: string;
+  projectId: string | null;
   emailSent: boolean;
   emailId: string | null;
 }
@@ -39,14 +42,13 @@ export async function onboardClient(
   const now = (deps.now ?? (() => new Date()))().toISOString();
   const tempPassword = (deps.generatePassword ?? defaultPassword)();
   const clientId = input.clientId ?? `${slugify(input.companyName)}-${randomBytes(3).toString("hex")}`;
+  const actorName = deps.actorName ?? "Voltair Studio";
 
-  // Guard: email must be free.
   const existing = await deps.auth.getUserByEmail(input.email).catch(() => null);
   if (existing) {
     throw new OnboardError(`An account already exists for ${input.email}.`);
   }
 
-  // 1. Auth account
   const user = await deps.auth.createUser({
     email: input.email,
     password: tempPassword,
@@ -54,16 +56,19 @@ export async function onboardClient(
     emailVerified: false,
   });
 
+  let projectId: string | null = null;
+
   try {
-    // 2. Custom JWT claims — the basis of every security rule
     await deps.auth.setCustomUserClaims(user.uid, { role: "client", clientId });
 
-    // 3. Atomic Firestore batch: company doc + user profile doc
     const clientDoc: ClientCompany = {
       clientId,
       name: input.companyName,
       logoUrl: null,
       status: "active",
+      primaryContactUid: user.uid,
+      primaryContactName: input.displayName,
+      primaryContactEmail: input.email,
       createdAt: now,
     };
     const profileDoc: UserProfile = {
@@ -75,17 +80,53 @@ export async function onboardClient(
       avatarUrl: null,
       createdAt: now,
     };
+
     const batch = deps.db.batch();
     batch.set(deps.db.collection(COLLECTIONS.clients).doc(clientId), clientDoc);
     batch.set(deps.db.collection(COLLECTIONS.users).doc(user.uid), profileDoc);
+
+    if (input.initialProjectName) {
+      const projectRef = deps.db.collection(COLLECTIONS.projects).doc();
+      projectId = projectRef.id;
+      const projectDoc: Project = {
+        projectId,
+        clientId,
+        name: input.initialProjectName,
+        description: null,
+        status: "active",
+        stage: "onboarding",
+        vercelPreviewUrl: null,
+        githubRepo: null,
+        milestones: [],
+        timeline: { startDate: now, endDate: null },
+        createdAt: now,
+      };
+      batch.set(projectRef, projectDoc);
+    }
+
+    const activityRef = deps.db.collection(COLLECTIONS.activity).doc();
+    const activityDoc: Activity = {
+      id: activityRef.id,
+      type: "client-onboarded",
+      clientId,
+      clientName: input.companyName,
+      projectId,
+      projectName: input.initialProjectName ?? null,
+      deliverableId: null,
+      deliverableName: null,
+      actorName,
+      actorRole: "admin",
+      summary: `${actorName} onboarded ${input.companyName}`,
+      createdAt: now,
+    };
+    batch.set(activityRef, activityDoc);
+
     await batch.commit();
   } catch (error) {
-    // Roll back the orphaned auth account so a retry is clean.
     await deps.auth.deleteUser(user.uid).catch(() => {});
     throw error;
   }
 
-  // 4. Branded onboarding email — non-fatal if it fails (the account is valid).
   let emailSent = false;
   let emailId: string | null = null;
   try {
@@ -102,7 +143,7 @@ export async function onboardClient(
     emailSent = false;
   }
 
-  return { clientId, uid: user.uid, tempPassword, emailSent, emailId };
+  return { clientId, uid: user.uid, tempPassword, projectId, emailSent, emailId };
 }
 
 function slugify(name: string): string {
@@ -117,7 +158,6 @@ function slugify(name: string): string {
 }
 
 function defaultPassword(): string {
-  // Ambiguity-free charset; grouped for readability when shared with a client.
   const charset = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
   const bytes = randomBytes(20);
   let raw = "";

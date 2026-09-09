@@ -31,7 +31,9 @@ export function DeliverableGrid({
             <span className="grid size-9 place-items-center rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted transition-colors group-hover:text-brand-persimmon">
               <FileTypeIcon type={d.fileType} className="size-4" />
             </span>
-            <span className="tnum font-mono text-[11px] text-ink-subtle">v{d.version}</span>
+            <span className="tnum font-mono text-[11px] text-ink-subtle">
+              {d.versionLabel ?? `v${d.version}`}
+            </span>
           </div>
           <p className="mt-3 line-clamp-2 text-[14px] font-medium text-ink">{d.name}</p>
           <p className="tnum mt-1 text-[11px] text-ink-subtle">{formatDate(d.createdAt)}</p>

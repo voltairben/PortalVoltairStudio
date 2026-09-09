@@ -52,6 +52,9 @@ await db.doc("clients/acme").set({
   name: "Acme Corp",
   logoUrl: null,
   status: "active",
+  primaryContactUid: clientUid,
+  primaryContactName: "Ada Mercer",
+  primaryContactEmail: "client@acme.test",
   createdAt: iso(-90),
 });
 
@@ -83,7 +86,8 @@ const projects = [
     description: "A 90-second hero film for the spring product launch.",
     status: "active",
     stage: "qa",
-    stagingUrl: "https://acme-brand-film.vercel.app",
+    vercelPreviewUrl: "https://acme-brand-film.vercel.app",
+    githubRepo: "voltairben/acme-brand-film",
     createdAt: iso(-42),
     timeline: { startDate: iso(-42), endDate: iso(12) },
     milestones: [
@@ -102,7 +106,8 @@ const projects = [
     description: "Full redesign and rebuild of acmecorp.com.",
     status: "active",
     stage: "development",
-    stagingUrl: "https://acme-web-staging.vercel.app",
+    vercelPreviewUrl: "https://acme-web-staging.vercel.app",
+    githubRepo: "voltairben/acme-site",
     createdAt: iso(-25),
     timeline: { startDate: iso(-25), endDate: iso(30) },
     milestones: [
@@ -120,7 +125,8 @@ const projects = [
     description: "A six-week paid social campaign across three channels.",
     status: "completed",
     stage: "launched",
-    stagingUrl: null,
+    vercelPreviewUrl: null,
+    githubRepo: null,
     createdAt: iso(-160),
     timeline: { startDate: iso(-160), endDate: iso(-90) },
     milestones: [
@@ -147,6 +153,7 @@ const deliverables = [
     fileUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
     fileType: "video",
     version: 3,
+    versionLabel: null,
     status: "pending",
     feedbackCount: 2,
     decidedAt: null,
@@ -160,6 +167,7 @@ const deliverables = [
     fileUrl: "https://picsum.photos/id/1067/1600/1000",
     fileType: "image",
     version: 2,
+    versionLabel: null,
     status: "approved",
     feedbackCount: 0,
     decidedAt: iso(-4),
@@ -173,6 +181,7 @@ const deliverables = [
     fileUrl: "https://pdfobject.com/pdf/sample.pdf",
     fileType: "document",
     version: 1,
+    versionLabel: null,
     status: "approved",
     feedbackCount: 0,
     decidedAt: iso(-35),
@@ -186,6 +195,7 @@ const deliverables = [
     fileUrl: "https://picsum.photos/id/180/1600/2400",
     fileType: "image",
     version: 1,
+    versionLabel: null,
     status: "changes-requested",
     feedbackCount: 1,
     decidedAt: iso(-2),
@@ -224,6 +234,18 @@ const comments = [
     attachments: [],
     timestamp: iso(-5),
   },
+  {
+    commentId: "c3",
+    deliverableId: "web-design-review",
+    projectId: "acme-website",
+    clientId: "acme",
+    userId: clientUid,
+    userName: "Ada Mercer",
+    userRole: "client",
+    text: "[Changes Requested] The hero headline is buried — can we bump the size and tighten the nav?",
+    attachments: [],
+    timestamp: iso(-2),
+  },
 ];
 
 for (const comment of comments) {
@@ -231,5 +253,58 @@ for (const comment of comments) {
 }
 console.log(`✓ comments  ${comments.length}`);
 
-console.log("\nSeed complete. Sign in at http://localhost:3000/login as client@acme.test / voltair123");
+// --- activity feed ----------------------------------------------------
+const activity = [
+  {
+    id: "a1",
+    type: "client-onboarded",
+    clientId: "acme",
+    clientName: "Acme Corp",
+    projectId: null,
+    projectName: null,
+    deliverableId: null,
+    deliverableName: null,
+    actorName: "Studio Admin",
+    actorRole: "admin",
+    summary: "Studio Admin onboarded Acme Corp",
+    createdAt: iso(-90),
+  },
+  {
+    id: "a2",
+    type: "deliverable-published",
+    clientId: "acme",
+    clientName: "Acme Corp",
+    projectId: "acme-brand-film",
+    projectName: "Brand Film 2026",
+    deliverableId: "film-cut-v3",
+    deliverableName: "Brand Film — Cut v3",
+    actorName: "Studio Admin",
+    actorRole: "admin",
+    summary: "Published “Brand Film — Cut v3” to Brand Film 2026",
+    createdAt: iso(-6),
+  },
+  {
+    id: "a3",
+    type: "deliverable-changes-requested",
+    clientId: "acme",
+    clientName: "Acme Corp",
+    projectId: "acme-website",
+    projectName: "Marketing Website",
+    deliverableId: "web-design-review",
+    deliverableName: "Homepage design — round 1",
+    actorName: "Ada Mercer",
+    actorRole: "client",
+    summary: "Ada Mercer requested changes on “Homepage design — round 1”",
+    createdAt: iso(-2),
+  },
+];
+
+for (const item of activity) {
+  await db.doc(`activity/${item.id}`).set(item);
+}
+console.log(`✓ activity  ${activity.length}`);
+
+console.log("\nSeed complete.");
+console.log("  client@acme.test / voltair123  ->  http://localhost:3000/login");
+console.log("  admin@voltair.test / voltair123 ->  http://localhost:3000/admin");
 process.exit(0);

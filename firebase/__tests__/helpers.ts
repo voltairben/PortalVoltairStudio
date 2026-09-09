@@ -52,6 +52,7 @@ export const deliverableDoc = (clientId: string, projectId: string) => ({
   fileUrl: `deliverables/${clientId}/cut-01.mp4`,
   fileType: "video",
   version: 1,
+  versionLabel: null,
   status: "pending",
   feedbackCount: 0,
   createdAt: iso,

@@ -25,8 +25,10 @@ export interface Project {
   description: string | null;
   status: ProjectStatus;
   stage: ProjectStage;
-  /** Current staging / preview deployment, surfaced read-only to the client. */
-  stagingUrl: string | null;
+  /** Current Vercel preview / staging deployment, surfaced read-only to the client. */
+  vercelPreviewUrl: string | null;
+  /** GitHub repo, e.g. "voltairben/acme-site". Studio-only. */
+  githubRepo: string | null;
   milestones: Milestone[];
   timeline: {
     startDate: string;

@@ -83,5 +83,12 @@ service cloud.firestore {
 
       allow update, delete: if isAdmin();
     }
+
+    // ---- studio activity feed ------------------------------------------------
+    // Admin-only read; written exclusively by server actions (Admin SDK).
+    match /activity/{activityId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
   }
 }

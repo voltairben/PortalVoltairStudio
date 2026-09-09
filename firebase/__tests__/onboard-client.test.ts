@@ -30,7 +30,15 @@ describe("onboardClient", () => {
       clientId: result.clientId,
       name: "Acme Films",
       status: "active",
+      primaryContactUid: result.uid,
+      primaryContactEmail: "founder@acmefilms.test",
     });
+
+    const activitySnap = await adminDb
+      .collection("activity")
+      .where("clientId", "==", result.clientId)
+      .get();
+    expect(activitySnap.docs.map((d) => d.data().type)).toContain("client-onboarded");
 
     const profileSnap = await adminDb.doc(`users/${result.uid}`).get();
     expect(profileSnap.data()).toMatchObject({
@@ -63,6 +71,28 @@ describe("onboardClient", () => {
     );
     createdUids.push(result.uid);
     expect(result.clientId).toBe("northwind");
+  });
+
+  it("creates an initial project when initialProjectName is given", async () => {
+    const result = await onboardClient(
+      {
+        companyName: "Kickoff Co",
+        email: "hi@kickoff.test",
+        displayName: "Robin Vega",
+        initialProjectName: "Rebrand 2026",
+      },
+      { auth: adminAuth, db: adminDb, sendOnboardingEmail: vi.fn().mockResolvedValue({ id: null }) },
+    );
+    createdUids.push(result.uid);
+    expect(result.projectId).toBeTruthy();
+
+    const projectSnap = await adminDb.doc(`projects/${result.projectId}`).get();
+    expect(projectSnap.data()).toMatchObject({
+      clientId: result.clientId,
+      name: "Rebrand 2026",
+      stage: "onboarding",
+      status: "active",
+    });
   });
 
   it("rejects a duplicate email without creating an orphan account", async () => {
