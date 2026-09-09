@@ -16,9 +16,18 @@
     "test:unit": "vitest run --project unit",
     "test:rules": "firebase emulators:exec --only auth,firestore,storage \"vitest run --project firebase\"",
     "test:email": "node scripts/run-live-email-test.mjs",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "cap:sync": "cap sync",
+    "cap:doctor": "cap doctor",
+    "cap:ios": "cap sync ios && cap open ios",
+    "cap:android": "cap sync android && cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/core": "^6.2.2",
+    "@capacitor/ios": "^6.2.2",
+    "@capacitor/keyboard": "^6.0.4",
+    "@capacitor/status-bar": "^6.0.3",
     "canvas-confetti": "^1.9.4",
     "firebase": "^12.18.0",
     "firebase-admin": "^14.3.0",
@@ -36,6 +45,7 @@
     }
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.2.2",
     "@firebase/rules-unit-testing": "^5.0.2",
     "@playwright/test": "^1.63.0",
     "@serwist/turbopack": "^9.5.12",

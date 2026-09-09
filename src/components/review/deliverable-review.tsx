@@ -1,14 +1,32 @@
 "use client";
 
 import { Download } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRef } from "react";
 import type { ComposerHandle } from "@/components/review/comment-composer";
 import { CommentThread } from "@/components/review/comment-thread";
 import { DecisionPanel } from "@/components/review/decision-panel";
-import { ImageViewer } from "@/components/review/image-viewer";
-import { PdfViewer } from "@/components/review/pdf-viewer";
-import { VideoPlayer } from "@/components/review/video-player";
 import type { Deliverable, FeedbackItem } from "@/types";
+
+// The three review tools are code-split: a given deliverable renders exactly one,
+// so the other two never reach the browser. A fixed-height skeleton holds the
+// layout so swapping the real tool in causes no CLS.
+const ViewerSkeleton = () => (
+  <div className="min-h-[60vh] animate-pulse rounded-xl border border-zinc-800 bg-surface-1" />
+);
+
+const VideoPlayer = dynamic(
+  () => import("@/components/review/video-player").then((m) => m.VideoPlayer),
+  { ssr: false, loading: ViewerSkeleton },
+);
+const ImageViewer = dynamic(
+  () => import("@/components/review/image-viewer").then((m) => m.ImageViewer),
+  { ssr: false, loading: ViewerSkeleton },
+);
+const PdfViewer = dynamic(
+  () => import("@/components/review/pdf-viewer").then((m) => m.PdfViewer),
+  { ssr: false, loading: ViewerSkeleton },
+);
 
 const CHANGES_PREFILL = "[Changes Requested] ";
 

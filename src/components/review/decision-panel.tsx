@@ -47,7 +47,7 @@ export function DecisionPanel({
       if (result.ok) {
         setOverride("approved");
         setModalOpen(false);
-        celebrate();
+        void celebrate();
         router.refresh();
       } else {
         setError(result.error ?? "Something went wrong. Try again.");

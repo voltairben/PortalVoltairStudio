@@ -47,3 +47,11 @@ next-env.d.ts
 
 # phase 3 verification artifacts
 scratch-shots/
+scratch-*.log
+
+# capacitor — synced web assets + generated config (regenerate with `npx cap sync`)
+/android/app/src/main/assets/public
+/android/app/src/main/assets/capacitor.config.json
+/android/app/src/main/res/xml/config.xml
+/ios/App/App/public
+/ios/App/App/capacitor.config.json

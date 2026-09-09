@@ -17,12 +17,18 @@ export function ImageViewer({ src, alt }: { src: string; alt: string }) {
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "group relative block w-full overflow-hidden rounded-xl border border-zinc-800",
+          // Reserve the height up front so the image loading in causes no layout shift.
+          "group relative flex min-h-[60vh] w-full items-center justify-center overflow-hidden rounded-xl border border-zinc-800",
           CHECKER,
         )}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt={alt} className="mx-auto max-h-[68vh] w-auto object-contain" />
+        <img
+          src={src}
+          alt={alt}
+          decoding="async"
+          className="mx-auto max-h-[68vh] w-auto object-contain"
+        />
         <span className="absolute right-3 top-3 flex items-center gap-1.5 rounded-md border border-zinc-700 bg-black/60 px-2 py-1 text-[11px] text-ink-muted opacity-0 backdrop-blur transition-opacity group-hover:opacity-100">
           <Maximize2 className="size-3" />
           Zoom

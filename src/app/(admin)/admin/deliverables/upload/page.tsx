@@ -1,7 +1,7 @@
 import { ChevronLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { DeliverableUpload } from "@/components/admin/deliverable-upload";
+import { DeliverableUploadLazy } from "@/components/admin/deliverable-upload-lazy";
 import { PageHeader } from "@/components/admin/page-header";
 import { getUploadTargets } from "@/lib/data/admin";
 import { requireAdmin } from "@/lib/firebase/session";
@@ -37,7 +37,7 @@ export default async function UploadDeliverablePage({
           Create a project first, then upload deliverables to it.
         </p>
       ) : (
-        <DeliverableUpload targets={targets} preselectedProjectId={project} />
+        <DeliverableUploadLazy targets={targets} preselectedProjectId={project} />
       )}
     </div>
   );

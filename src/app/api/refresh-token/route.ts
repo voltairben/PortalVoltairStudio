@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { refreshNextResponseCookiesWithToken } from "next-firebase-auth-edge/next/cookies";
 import { getAuthConfig } from "@/lib/firebase/auth-config";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 /**
  * Forces the __session cookie to be re-minted from a fresh client ID token.
@@ -11,6 +12,17 @@ import { getAuthConfig } from "@/lib/firebase/auth-config";
  * without a logout/login round-trip.
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const limit = rateLimit(`refresh:${clientIp(request.headers)}`, {
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (!limit.ok) {
+    return NextResponse.json(
+      { error: "Too many token refreshes." },
+      { status: 429, headers: { "retry-after": String(limit.retryAfterSeconds) } },
+    );
+  }
+
   const header = request.headers.get("Authorization") ?? "";
   const idToken = header.startsWith("Bearer ") ? header.slice("Bearer ".length) : null;
 

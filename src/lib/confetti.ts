@@ -1,9 +1,12 @@
-import confetti from "canvas-confetti";
-
-/** A brief, restrained persimmon burst — used only on a client approval. */
-export function celebrate(): void {
+/**
+ * A brief, restrained persimmon burst — used only on a client approval.
+ * `canvas-confetti` is loaded on demand so it never enters any route bundle.
+ */
+export async function celebrate(): Promise<void> {
   if (typeof window === "undefined") return;
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const { default: confetti } = await import("canvas-confetti");
 
   const base = {
     colors: ["#FF4F00", "#FF6A2B", "#F5F5F4"],

@@ -12,8 +12,23 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { authMiddleware, redirectToLogin } from "next-firebase-auth-edge";
 import { getAuthConfig, LOGIN_PATH, LOGOUT_PATH, PUBLIC_PATHS } from "@/lib/firebase/auth-config";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export async function proxy(request: NextRequest) {
+  // Throttle sign-in attempts per IP before the auth middleware verifies anything.
+  if (request.method === "POST" && request.nextUrl.pathname === LOGIN_PATH) {
+    const limit = rateLimit(`login:${clientIp(request.headers)}`, {
+      limit: 10,
+      windowMs: 5 * 60_000,
+    });
+    if (!limit.ok) {
+      return NextResponse.json(
+        { error: "Too many sign-in attempts. Wait a moment and try again." },
+        { status: 429, headers: { "retry-after": String(limit.retryAfterSeconds) } },
+      );
+    }
+  }
+
   return authMiddleware(request, {
     loginPath: LOGIN_PATH,
     logoutPath: LOGOUT_PATH,
