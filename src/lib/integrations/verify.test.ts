@@ -131,6 +131,19 @@ describe("normalizeGithubEvent", () => {
     expect(normalizeGithubEvent("issues", "d", "{}").events).toHaveLength(0);
   });
 
+  it("handles a form-urlencoded (`payload=…`) body once unwrapped", () => {
+    const json = JSON.stringify({
+      ref: "refs/heads/main",
+      repository: { full_name: "acme/site" },
+      commits: [{ id: "z9", message: "Polish the footer", url: "u", author: { name: "Ben" } }],
+    });
+    const formBody = `payload=${encodeURIComponent(json)}`;
+    const unwrapped = new URLSearchParams(formBody).get("payload") ?? "{}";
+    const { events } = normalizeGithubEvent("push", "d-7", unwrapped);
+    expect(events).toHaveLength(1);
+    expect(events[0]?.title).toBe("Polish the footer");
+  });
+
   it("maps a deployment_status success → ready with the environment url", () => {
     const { events, deployment } = normalizeGithubEvent(
       "deployment_status",

@@ -17,9 +17,17 @@ export async function POST(request: Request): Promise<NextResponse> {
   }
 
   const raw = await request.text();
+  // GitHub signs the raw body — verify before touching the content.
   if (!verifyGithubSignature(raw, request.headers.get("x-hub-signature-256"), secret)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
+
+  // In `application/x-www-form-urlencoded` mode GitHub wraps the JSON as
+  // `payload=<url-encoded>`; in `application/json` mode the body *is* the JSON.
+  const contentType = request.headers.get("content-type") ?? "";
+  const body = contentType.includes("application/x-www-form-urlencoded")
+    ? (new URLSearchParams(raw).get("payload") ?? "{}")
+    : raw;
 
   const eventName = request.headers.get("x-github-event");
   if (eventName === "ping") {
@@ -29,7 +37,7 @@ export async function POST(request: Request): Promise<NextResponse> {
   const { repo, events, deployment } = normalizeGithubEvent(
     eventName,
     request.headers.get("x-github-delivery"),
-    raw,
+    body,
   );
   if (events.length === 0 && !deployment) {
     return NextResponse.json({ ok: true, skipped: "no surfaced activity" });
