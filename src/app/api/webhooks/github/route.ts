@@ -37,12 +37,17 @@ export async function POST(request: Request): Promise<NextResponse> {
 
   const project = await findProjectByRepo(repo);
   if (!project) {
-    return NextResponse.json({ ok: true, skipped: "no project matches this repo" });
+    console.warn(`[webhook/github] ${eventName} for "${repo}" — no project matches`);
+    return NextResponse.json({ ok: true, skipped: "no project matches this repo", repo });
   }
 
   // deployment_status events also carry Vercel's current build state.
   if (deployment) await setProjectDeployment(project.projectId, deployment);
   if (events.length > 0) await writePulseEvents(project, events);
+  console.log(
+    `[webhook/github] ${eventName} for "${repo}" → project ${project.projectId} ` +
+      `(client ${project.clientId}): ${events.length} event(s), deployment=${deployment?.state ?? "—"}`,
+  );
 
   return NextResponse.json({
     ok: true,
