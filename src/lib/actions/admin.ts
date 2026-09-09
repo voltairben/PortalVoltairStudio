@@ -99,6 +99,7 @@ export async function createProject(input: unknown): Promise<ActionResult<{ proj
     stage: d.stage,
     vercelPreviewUrl: d.vercelPreviewUrl ?? null,
     githubRepo: d.githubRepo || null,
+    deployment: null,
     milestones: [],
     timeline: { startDate: now, endDate: null },
     createdAt: now,

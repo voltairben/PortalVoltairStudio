@@ -14,6 +14,7 @@ import {
   deliverableDoc,
   fs,
   projectDoc,
+  pulseEventDoc,
   seed,
   userProfileDoc,
 } from "./helpers";
@@ -29,6 +30,8 @@ beforeEach(async () => {
     await setDoc(doc(db, "deliverables", "del-a"), deliverableDoc(CLIENT_A, "proj-a"));
     await setDoc(doc(db, "deliverables", "del-b"), deliverableDoc(CLIENT_B, "proj-b"));
     await setDoc(doc(db, "comments", "cmt-b"), commentDoc(CLIENT_B, { userId: USER_B }));
+    await setDoc(doc(db, "pulseEvents", "pulse-a"), pulseEventDoc(CLIENT_A, "proj-a"));
+    await setDoc(doc(db, "pulseEvents", "pulse-b"), pulseEventDoc(CLIENT_B, "proj-b"));
   });
 });
 
@@ -172,6 +175,33 @@ describe("studio activity feed", () => {
   it("nobody can write to the activity feed from a client", async () => {
     await assertFails(
       setDoc(doc(fs(adminCtx()), "activity", "act-2"), { type: "x", clientId: CLIENT_A }),
+    );
+  });
+});
+
+describe("developer pulse — tenant isolation", () => {
+  it("client A reads its own pulse events, not client B's", async () => {
+    const db = fs(clientCtx(USER_A, CLIENT_A));
+    await assertSucceeds(getDoc(doc(db, "pulseEvents", "pulse-a")));
+    await assertFails(getDoc(doc(db, "pulseEvents", "pulse-b")));
+  });
+
+  it("client A cannot query pulse events filtered to client B", async () => {
+    const db = fs(clientCtx(USER_A, CLIENT_A));
+    await assertFails(
+      getDocs(query(collection(db, "pulseEvents"), where("clientId", "==", CLIENT_B))),
+    );
+    await assertSucceeds(
+      getDocs(query(collection(db, "pulseEvents"), where("clientId", "==", CLIENT_A))),
+    );
+  });
+
+  it("no one may write a pulse event from a client SDK (webhook / Admin SDK only)", async () => {
+    await assertFails(
+      setDoc(doc(fs(clientCtx(USER_A, CLIENT_A)), "pulseEvents", "pulse-x"), pulseEventDoc(CLIENT_A, "proj-a")),
+    );
+    await assertFails(
+      setDoc(doc(fs(adminCtx()), "pulseEvents", "pulse-y"), pulseEventDoc(CLIENT_A, "proj-a")),
     );
   });
 });

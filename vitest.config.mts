@@ -30,6 +30,16 @@ export default defineConfig({
           hookTimeout: 30_000,
         },
       },
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          environment: "node",
+          globals: true,
+          // Pure logic tests co-located with source — no emulator needed.
+          include: ["src/**/*.test.ts"],
+        },
+      },
     ],
   },
 });

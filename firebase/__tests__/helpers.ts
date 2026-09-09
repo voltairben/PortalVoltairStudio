@@ -74,6 +74,20 @@ export const commentDoc = (
   ...overrides,
 });
 
+export const pulseEventDoc = (clientId: string, projectId: string) => ({
+  clientId,
+  projectId,
+  source: "github",
+  kind: "commit",
+  title: "Tighten the hero animation",
+  detail: `main · Ben`,
+  url: "https://github.com/acme/site/commit/abc123",
+  state: null,
+  actorName: "Ben",
+  actorAvatar: null,
+  createdAt: iso,
+});
+
 export const clientCompanyDoc = (clientId: string) => ({
   clientId,
   name: `${clientId} Inc`,

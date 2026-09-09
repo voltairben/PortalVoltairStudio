@@ -1,7 +1,7 @@
 import "server-only";
 import type { DocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
-import type { ClientCompany, Deliverable, FeedbackItem, Project } from "@/types";
+import type { ClientCompany, Deliverable, FeedbackItem, Project, PulseEvent } from "@/types";
 import { COLLECTIONS } from "@/types";
 
 /**
@@ -53,6 +53,21 @@ export async function getDeliverable(
   return deliverable.clientId === clientId ? deliverable : null;
 }
 
+/** SSR seed for the Developer Pulse stream; the client listener takes over on mount. */
+export async function getInitialPulse(
+  projectId: string,
+  clientId: string,
+): Promise<PulseEvent[]> {
+  const snap = await adminDb
+    .collection(COLLECTIONS.pulseEvents)
+    .where("clientId", "==", clientId)
+    .where("projectId", "==", projectId)
+    .orderBy("createdAt", "desc")
+    .limit(25)
+    .get();
+  return snap.docs.map((d) => ({ ...(d.data() as PulseEvent), id: d.id }));
+}
+
 /** SSR seed for the live comment thread; the client listener takes over on mount. */
 export async function getInitialComments(
   deliverableId: string,
@@ -72,6 +87,7 @@ function readProject(snap: DocumentSnapshot): Project {
   return {
     ...project,
     projectId: snap.id,
+    deployment: project.deployment ?? null,
     milestones: [...(project.milestones ?? [])].sort((a, b) => a.order - b.order),
   };
 }

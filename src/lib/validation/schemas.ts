@@ -54,6 +54,15 @@ export const projectStageSchema = z.enum([
   "launched",
 ]);
 
+export const projectDeploymentSchema = z.object({
+  state: z.enum(["queued", "building", "ready", "error", "canceled"]),
+  url: z.url().nullable(),
+  deploymentId: z.string().nullable(),
+  branch: z.string().nullable(),
+  durationMs: z.number().nonnegative().nullable(),
+  updatedAt: isoDateTime,
+});
+
 export const projectSchema = z.object({
   projectId: z.string().min(1),
   clientId: z.string().min(1),
@@ -63,6 +72,7 @@ export const projectSchema = z.object({
   stage: projectStageSchema,
   vercelPreviewUrl: z.url().nullable(),
   githubRepo: z.string().nullable(),
+  deployment: projectDeploymentSchema.nullable(),
   milestones: z.array(milestoneSchema),
   timeline: z.object({
     startDate: isoDateTime,

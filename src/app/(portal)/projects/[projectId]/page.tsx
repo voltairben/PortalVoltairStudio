@@ -3,11 +3,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft } from "lucide-react";
 import { DeliverableGrid } from "@/components/portal/deliverable-grid";
+import { DeveloperPulse } from "@/components/portal/developer-pulse";
 import { MilestoneProgress } from "@/components/portal/milestone-progress";
 import { MilestoneRail } from "@/components/portal/milestone-rail";
 import { StagingPreview } from "@/components/portal/staging-preview";
 import { Badge } from "@/components/ui/badge";
-import { getDeliverables, getProject } from "@/lib/data/portal";
+import { getDeliverables, getInitialPulse, getProject } from "@/lib/data/portal";
 import { requireClient } from "@/lib/firebase/session";
 import { formatDate } from "@/lib/format";
 import { STAGE_LABELS } from "@/types";
@@ -27,7 +28,10 @@ export default async function ProjectPage({ params }: { params: Params }) {
   const project = await getProject(projectId, user.clientId ?? "");
   if (!project) notFound();
 
-  const deliverables = await getDeliverables(projectId, user.clientId ?? "");
+  const [deliverables, pulse] = await Promise.all([
+    getDeliverables(projectId, user.clientId ?? ""),
+    getInitialPulse(projectId, user.clientId ?? ""),
+  ]);
 
   return (
     <div className="space-y-10">
@@ -76,6 +80,13 @@ export default async function ProjectPage({ params }: { params: Params }) {
           )}
         </aside>
       </div>
+
+      <DeveloperPulse
+        projectId={projectId}
+        clientId={user.clientId ?? ""}
+        initialEvents={pulse}
+        initialDeployment={project.deployment}
+      />
 
       <section className="space-y-4">
         <h2 className="text-sm font-semibold text-ink">

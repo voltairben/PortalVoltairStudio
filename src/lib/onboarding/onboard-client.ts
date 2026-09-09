@@ -97,6 +97,7 @@ export async function onboardClient(
         stage: "onboarding",
         vercelPreviewUrl: null,
         githubRepo: null,
+        deployment: null,
         milestones: [],
         timeline: { startDate: now, endDate: null },
         createdAt: now,

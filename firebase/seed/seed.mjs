@@ -88,6 +88,14 @@ const projects = [
     stage: "qa",
     vercelPreviewUrl: "https://acme-brand-film.vercel.app",
     githubRepo: "voltairben/acme-brand-film",
+    deployment: {
+      state: "ready",
+      url: "https://acme-brand-film.vercel.app",
+      deploymentId: "dpl_seed_film",
+      branch: "main",
+      durationMs: 47_000,
+      updatedAt: iso(-1),
+    },
     createdAt: iso(-42),
     timeline: { startDate: iso(-42), endDate: iso(12) },
     milestones: [
@@ -108,6 +116,14 @@ const projects = [
     stage: "development",
     vercelPreviewUrl: "https://acme-web-staging.vercel.app",
     githubRepo: "voltairben/acme-site",
+    deployment: {
+      state: "building",
+      url: "https://acme-web-staging.vercel.app",
+      deploymentId: "dpl_seed_web",
+      branch: "feat/pricing",
+      durationMs: null,
+      updatedAt: iso(0),
+    },
     createdAt: iso(-25),
     timeline: { startDate: iso(-25), endDate: iso(30) },
     milestones: [
@@ -127,6 +143,7 @@ const projects = [
     stage: "launched",
     vercelPreviewUrl: null,
     githubRepo: null,
+    deployment: null,
     createdAt: iso(-160),
     timeline: { startDate: iso(-160), endDate: iso(-90) },
     milestones: [
@@ -303,6 +320,59 @@ for (const item of activity) {
   await db.doc(`activity/${item.id}`).set(item);
 }
 console.log(`✓ activity  ${activity.length}`);
+
+// --- developer pulse (webhook mirror) --------------------------------
+const pulse = (id, projectId, over) => ({
+  id,
+  clientId: "acme",
+  projectId,
+  source: "github",
+  kind: "commit",
+  title: "Commit",
+  detail: "main · Ben",
+  url: "https://github.com/voltairben/acme-site",
+  state: null,
+  actorName: "Ben",
+  actorAvatar: null,
+  createdAt: iso(-1),
+  ...over,
+});
+
+const pulseEvents = [
+  pulse("p1", "acme-brand-film", {
+    source: "vercel",
+    kind: "deployment",
+    title: "Staging preview updated",
+    detail: "main branch",
+    url: "https://acme-brand-film.vercel.app",
+    state: "ready",
+    createdAt: iso(-1),
+  }),
+  pulse("p2", "acme-brand-film", {
+    title: "Grade the final montage sequence",
+    detail: "main · Ben",
+    url: "https://github.com/voltairben/acme-brand-film",
+    createdAt: iso(-2),
+  }),
+  pulse("p3", "acme-website", {
+    kind: "pull-request",
+    title: "Pull request opened: Pricing page layout",
+    detail: "#42 · feat/pricing → main",
+    url: "https://github.com/voltairben/acme-site/pull/42",
+    state: "open",
+    createdAt: iso(0),
+  }),
+  pulse("p4", "acme-website", {
+    title: "Wire up the pricing toggle",
+    detail: "feat/pricing · Ben",
+    createdAt: iso(0),
+  }),
+];
+
+for (const item of pulseEvents) {
+  await db.doc(`pulseEvents/${item.id}`).set(item);
+}
+console.log(`✓ pulseEvents  ${pulseEvents.length}`);
 
 console.log("\nSeed complete.");
 console.log("  client@acme.test / voltair123  ->  http://localhost:3000/login");

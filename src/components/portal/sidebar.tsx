@@ -21,6 +21,7 @@ export function Sidebar({
     <aside
       data-testid="sidebar"
       className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col border-r border-zinc-800 bg-brand-obsidian lg:flex"
+      style={{ paddingTop: "env(safe-area-inset-top)", paddingLeft: "env(safe-area-inset-left)" }}
     >
       <div className="flex h-14 items-center gap-2.5 border-b border-zinc-800 px-5">
         <Image src="/brand/voltair-logo.png" alt="" width={22} height={33} className="h-7 w-auto" />

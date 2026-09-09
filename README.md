@@ -79,6 +79,34 @@ Production has no seed data. Bootstrap the first studio admin:
 For Google sign-in on the live domain: Firebase console → Authentication →
 Settings → **Authorized domains** → add the Vercel domain.
 
+## Developer Pulse — webhook setup
+
+The client project page shows a live deployment badge + a commit/PR timeline.
+It reads **only** from Firestore (`pulseEvents` + `projects/{id}.deployment`);
+Vercel and GitHub push into it via signed webhooks, so the browser never calls
+an external API.
+
+A project is matched to incoming events by its **GitHub repo** field
+(`owner/repo`) — set it in the admin project editor.
+
+1. **GitHub** → Repo → Settings → Webhooks → Add webhook
+   - Payload URL `https://<domain>/api/webhooks/github`, content-type `application/json`
+   - Secret: any strong string → `GITHUB_WEBHOOK_SECRET`
+   - Events: **Pushes**, **Pull requests**, and **Deployment statuses**
+   - The `deployment_status` event carries Vercel's build state (queued → building →
+     ready / error), which Vercel posts to GitHub automatically — so the live
+     deployment badge works with **no Vercel plan upgrade**.
+2. *(optional, Vercel Pro)* **Vercel** → Project → Settings → Webhooks → Create
+   - URL `https://<domain>/api/webhooks/vercel`, events Deployment Created /
+     Succeeded / Error / Canceled → secret to `VERCEL_WEBHOOK_SECRET`
+   - Only adds build-duration detail; GitHub's `deployment_status` already covers
+     the badge and timeline.
+3. Add the secret(s) to Vercel env (all environments) and redeploy.
+
+Signatures are verified with `node:crypto` HMAC (Vercel SHA1, GitHub SHA256,
+constant-time) — an unsigned or forged request gets `401`. Bot commits and
+merge-commit noise are filtered out of the client timeline.
+
 ## How auth works
 
 1. Client signs in with the Firebase Web SDK (`src/lib/firebase/auth-client.ts`).

@@ -90,5 +90,13 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if false;
     }
+
+    // ---- developer pulse (deploy / commit mirror) --------------------------
+    // Client-readable within their own tenant (same O(1) clientId check as every
+    // other tenant doc). Written only by the webhook handlers via the Admin SDK.
+    match /pulseEvents/{eventId} {
+      allow read: if canReadTenantDoc();
+      allow write: if false;
+    }
   }
 }

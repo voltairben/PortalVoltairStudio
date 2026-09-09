@@ -15,12 +15,15 @@ export function AdminMobileNav() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-[52px] items-center gap-2.5 border-b border-zinc-800 bg-brand-obsidian/90 px-4 backdrop-blur-md lg:hidden">
+      <header
+        className="sticky top-0 z-30 flex h-[52px] items-center gap-2.5 border-b border-zinc-800 bg-brand-obsidian/90 px-4 backdrop-blur-md lg:hidden"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
         <button
           type="button"
           aria-label="Open menu"
           onClick={() => setOpen(true)}
-          className="-ml-1 rounded-md p-1.5 text-ink-muted hover:text-ink"
+          className="-ml-1 flex size-11 items-center justify-center rounded-md text-ink-muted hover:text-ink"
         >
           <Menu className="size-5" />
         </button>
@@ -46,7 +49,7 @@ export function AdminMobileNav() {
                 type="button"
                 aria-label="Close menu"
                 onClick={() => setOpen(false)}
-                className="rounded-md p-1.5 text-ink-muted hover:text-ink"
+                className="-mr-1.5 flex size-11 items-center justify-center rounded-md text-ink-muted hover:text-ink"
               >
                 <X className="size-5" />
               </button>
@@ -60,7 +63,7 @@ export function AdminMobileNav() {
                     href={item.href}
                     onClick={() => setOpen(false)}
                     className={cn(
-                      "flex items-center gap-3 rounded-md px-3 py-2.5 text-[14px] font-medium transition-colors",
+                      "flex min-h-11 items-center gap-3 rounded-md px-3 py-2.5 text-[14px] font-medium transition-colors",
                       active ? "bg-surface-1 text-brand-persimmon" : "text-ink-muted hover:text-ink",
                     )}
                   >

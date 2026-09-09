@@ -9,6 +9,18 @@ export type ProjectStatus = "active" | "completed" | "paused";
 
 export type MilestoneStatus = "pending" | "active" | "complete";
 
+export type DeploymentState = "queued" | "building" | "ready" | "error" | "canceled";
+
+/** Current staging deployment, mirrored from Vercel webhooks. Surfaced read-only to the client. */
+export interface ProjectDeployment {
+  state: DeploymentState;
+  url: string | null; // preview URL, protocol included
+  deploymentId: string | null;
+  branch: string | null;
+  durationMs: number | null;
+  updatedAt: string; // ISO 8601
+}
+
 export interface Milestone {
   id: string;
   title: string;
@@ -27,8 +39,10 @@ export interface Project {
   stage: ProjectStage;
   /** Current Vercel preview / staging deployment, surfaced read-only to the client. */
   vercelPreviewUrl: string | null;
-  /** GitHub repo, e.g. "voltairben/acme-site". Studio-only. */
+  /** GitHub repo, e.g. "voltairben/acme-site" — also the webhook→project key. */
   githubRepo: string | null;
+  /** Latest staging deployment state (Vercel webhook mirror), or null before the first deploy. */
+  deployment: ProjectDeployment | null;
   milestones: Milestone[];
   timeline: {
     startDate: string;
