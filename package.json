@@ -18,8 +18,10 @@
     "icons": "node scripts/generate-icons.mjs"
   },
   "dependencies": {
+    "canvas-confetti": "^1.9.4",
     "firebase": "^12.18.0",
     "firebase-admin": "^14.3.0",
+    "lucide-react": "^1.43.0",
     "next": "16.3.4",
     "next-firebase-auth-edge": "^1.12.1",
     "react": "19.2.8",
@@ -29,8 +31,10 @@
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^5.0.2",
+    "@playwright/test": "^1.63.0",
     "@serwist/turbopack": "^9.5.12",
     "@tailwindcss/postcss": "^4",
+    "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",

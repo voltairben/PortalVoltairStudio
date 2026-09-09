@@ -2,18 +2,21 @@
 
 /* ============================================================================
    Voltair Studio Portal — design tokens (Tailwind v4, CSS-first).
-   Dark-only: obsidian surfaces + a single persimmon brand accent.
+   Obsidian base + a single persimmon accent reserved for interactive focus.
+   The edit-bay signal: mono, tabular numerals in persimmon for anything that
+   is a measurement — timecode, version, "07 / 10" milestone counts.
    ========================================================================== */
 @theme {
   /* Surfaces — obsidian, layered by elevation */
   --color-brand-obsidian: #0a0a0a;
+  --color-brand-dark: #0a0a0a; /* alias per brief */
   --color-surface-1: #101012;
   --color-surface-2: #16161a;
   --color-surface-3: #1e1e23;
 
-  /* Hairlines */
+  /* Hairlines — razor-thin charcoal */
   --color-line: rgb(255 255 255 / 0.07);
-  --color-line-strong: rgb(255 255 255 / 0.13);
+  --color-line-strong: #27272a; /* zinc-800 */
 
   /* Text */
   --color-ink: #f5f5f4;
@@ -43,7 +46,7 @@
 
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
-  --default-transition-duration: 200ms;
+  --default-transition-duration: 180ms;
 }
 
 @layer base {
@@ -67,6 +70,7 @@
     background-color: var(--color-brand-obsidian);
     color: var(--color-ink);
     font-family: var(--font-sans);
+    letter-spacing: -0.006em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -75,7 +79,13 @@
   h2,
   h3 {
     text-wrap: balance;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.022em;
+  }
+
+  /* Tabular figures for measurements */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 
   ::selection {
@@ -83,16 +93,34 @@
     color: #fff;
   }
 
+  /* Global keyboard focus — persimmon with a delicate outer blur */
   :focus-visible {
     outline: 2px solid var(--color-brand-persimmon);
     outline-offset: 2px;
-    border-radius: 3px;
+    border-radius: 4px;
   }
 
-  /* Subtle, brand-tinted scrollbars */
+  /* Custom scrollbars — thin, charcoal track, persimmon on hover */
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-surface-3) transparent;
+    scrollbar-color: #2a2a30 transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #26262b;
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-brand-persimmon-dim);
+    background-clip: content-box;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -107,6 +135,8 @@
   }
 }
 
+/* --- utilities -------------------------------------------------------------- */
+
 @utility brand-glow {
   /* Soft persimmon aura behind hero elements */
   background-image: radial-gradient(
@@ -115,4 +145,36 @@
     rgb(255 79 0 / 0.04) 45%,
     transparent 75%
   );
+}
+
+@utility glow-persimmon {
+  /* Card hover state — thin persimmon edge + diffuse bloom */
+  border-color: rgb(255 79 0 / 0.5);
+  box-shadow:
+    0 0 0 1px rgb(255 79 0 / 0.28),
+    0 16px 50px -18px rgb(255 79 0 / 0.4);
+}
+
+@utility focus-glow {
+  &:focus-visible {
+    outline: 2px solid var(--color-brand-persimmon);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 5px rgb(255 79 0 / 0.15);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgb(255 79 0 / 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 7px rgb(255 79 0 / 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgb(255 79 0 / 0);
+  }
+}
+
+@utility pulse-persimmon {
+  animation: pulse-ring 2.4s var(--ease-out-expo) infinite;
 }

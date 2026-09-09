@@ -31,12 +31,24 @@ export const clientCompanySchema = z.object({
   createdAt: isoDateTime,
 });
 
+export const milestoneSchema = z.object({
+  id: z.string().min(1),
+  title: z.string().min(1),
+  status: z.enum(["pending", "active", "complete"]),
+  order: z.number().int().nonnegative(),
+  targetDate: isoDateTime.nullable(),
+  completedAt: isoDateTime.nullable(),
+});
+
 export const projectSchema = z.object({
   projectId: z.string().min(1),
   clientId: z.string().min(1),
   name: z.string().min(1),
   description: z.string().nullable(),
   status: z.enum(["active", "completed", "paused"]),
+  stage: z.enum(["onboarding", "design", "development", "qa", "launched"]),
+  stagingUrl: z.url().nullable(),
+  milestones: z.array(milestoneSchema),
   timeline: z.object({
     startDate: isoDateTime,
     endDate: isoDateTime.nullable(),
@@ -54,7 +66,15 @@ export const deliverableSchema = z.object({
   version: z.number().int().positive(),
   status: z.enum(["pending", "approved", "changes-requested"]),
   feedbackCount: z.number().int().nonnegative(),
+  decidedAt: isoDateTime.nullable(),
   createdAt: isoDateTime,
+});
+
+export const commentAttachmentSchema = z.object({
+  name: z.string().min(1),
+  url: z.string().min(1),
+  size: z.number().int().nonnegative(),
+  contentType: z.string().min(1),
 });
 
 export const feedbackItemSchema = z.object({
@@ -66,6 +86,7 @@ export const feedbackItemSchema = z.object({
   userName: z.string().min(1),
   userRole: roleSchema,
   text: z.string().trim().min(1).max(5000),
+  attachments: z.array(commentAttachmentSchema),
   timestamp: isoDateTime,
 });
 
@@ -88,12 +109,21 @@ export const createClientInputSchema = z.object({
 
 export type CreateClientInput = z.infer<typeof createClientInputSchema>;
 
-/** Comment a client may post from the browser (client SDK write). */
+/** Comment a client posts from the browser (client SDK write). */
 export const newCommentInputSchema = z.object({
   deliverableId: z.string().min(1),
   projectId: z.string().min(1),
   clientId: z.string().min(1),
   text: z.string().trim().min(1).max(5000),
+  attachments: z.array(commentAttachmentSchema).max(10).default([]),
 });
 
 export type NewCommentInput = z.infer<typeof newCommentInputSchema>;
+
+/** Payload for the deliverable approve / request-changes server actions. */
+export const deliverableDecisionSchema = z.object({
+  deliverableId: z.string().min(1),
+  projectId: z.string().min(1),
+});
+
+export type DeliverableDecisionInput = z.infer<typeof deliverableDecisionSchema>;

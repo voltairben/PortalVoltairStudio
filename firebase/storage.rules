@@ -1,8 +1,9 @@
 rules_version = '2';
 
 // Voltair Studio Portal — Storage rules.
-// Files live under tenant-scoped folders: /clients/{clientId}/...
-// Clients read only their own folder; only admins write.
+//   deliverables/{clientId}/...  — studio-uploaded deliverable files; tenant reads
+//   attachments/{clientId}/...   — client-attached feedback files; tenant reads + writes
+// Both paths carry {clientId} as the first segment so isolation is an O(1) check.
 
 service firebase.storage {
   match /b/{bucket}/o {
@@ -19,11 +20,16 @@ service firebase.storage {
         && request.auth.token.clientId == clientId;
     }
 
-    match /clients/{clientId}/{allPaths=**} {
+    match /deliverables/{clientId}/{allPaths=**} {
       allow read: if isAdmin() || isClientOf(clientId);
       allow write: if isAdmin();
     }
 
-    // Everything outside a tenant folder is denied by default.
+    match /attachments/{clientId}/{allPaths=**} {
+      allow read: if isAdmin() || isClientOf(clientId);
+      allow write: if isAdmin() || isClientOf(clientId);
+    }
+
+    // Everything else is denied by default.
   }
 }

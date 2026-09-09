@@ -11,5 +11,7 @@ export interface Deliverable {
   version: number;
   status: DeliverableStatus;
   feedbackCount: number;
+  /** When the client last approved / requested changes. */
+  decidedAt: string | null;
   createdAt: string; // ISO 8601
 }

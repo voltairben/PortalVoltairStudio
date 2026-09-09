@@ -44,3 +44,6 @@ next-env.d.ts
 *-debug.log
 .firebase/
 .dataconnect/
+
+# phase 3 verification artifacts
+scratch-shots/

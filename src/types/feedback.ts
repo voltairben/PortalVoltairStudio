@@ -1,5 +1,12 @@
 import type { Role } from "./user";
 
+export interface CommentAttachment {
+  name: string;
+  url: string;
+  size: number;
+  contentType: string;
+}
+
 export interface FeedbackItem {
   commentId: string;
   deliverableId: string;
@@ -9,5 +16,6 @@ export interface FeedbackItem {
   userName: string;
   userRole: Role;
   text: string;
+  attachments: CommentAttachment[];
   timestamp: string; // ISO 8601
 }

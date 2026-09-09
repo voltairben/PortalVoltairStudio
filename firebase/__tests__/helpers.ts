@@ -49,7 +49,7 @@ export const deliverableDoc = (clientId: string, projectId: string) => ({
   clientId,
   projectId,
   name: "cut-01.mp4",
-  fileUrl: `clients/${clientId}/cut-01.mp4`,
+  fileUrl: `deliverables/${clientId}/cut-01.mp4`,
   fileType: "video",
   version: 1,
   status: "pending",
@@ -68,6 +68,7 @@ export const commentDoc = (
   userName: "Alpha User",
   userRole: "client",
   text: "Looks great, ship it.",
+  attachments: [],
   timestamp: iso,
   ...overrides,
 });

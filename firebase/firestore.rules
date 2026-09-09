@@ -74,6 +74,8 @@ service cloud.firestore {
           isClientOf(request.resource.data.clientId)
           && request.resource.data.userId == request.auth.uid
           && request.resource.data.userRole == 'client'
+          && request.resource.data.deliverableId is string
+          && request.resource.data.projectId is string
           && request.resource.data.text is string
           && request.resource.data.text.size() > 0
           && request.resource.data.text.size() <= 5000
