@@ -47,8 +47,37 @@ Google sign-in also works against the Auth emulator (mock account picker).
 | `npm run lint` / `npm run typecheck` | ESLint / `tsc --noEmit` |
 | `npm run emulators` / `emulators:auth` | Firebase emulator suite / Auth only |
 | `npm run seed` | Seed emulator test accounts + custom claims |
-| `npm run test` | Vitest (rules unit tests land in Phase 2) |
+| `npm run test` / `npm run test:rules` | Vitest / rules tests against the emulators |
 | `npm run icons` | Regenerate PWA icons from `Brand Assets/VoltairLogo1.png` |
+| `node --env-file=.env.local scripts/set-admin-claim.mjs <email>` | Grant `role: admin` to a live Firebase user |
+
+## Deploying
+
+The app deploys to Vercel automatically on push to `main`. The **Firebase side is
+separate** and must be done once (and again whenever rules/indexes change):
+
+```bash
+npx firebase login
+npx firebase deploy --only firestore:rules,storage:rules,firestore:indexes
+```
+
+Without this, the live client portal's real-time reads fail (production Firestore
+runs locked-down default rules, and the composite indexes in
+`firestore.indexes.json` don't exist yet).
+
+### First production admin
+
+Production has no seed data. Bootstrap the first studio admin:
+
+1. Firebase console → Authentication → **Add user** (email + password).
+2. Grant the claim:
+   ```bash
+   node --env-file=.env.local scripts/set-admin-claim.mjs you@voltairstudio.com
+   ```
+3. Sign in at `https://<domain>/admin`, then onboard real clients from `/admin/clients`.
+
+For Google sign-in on the live domain: Firebase console → Authentication →
+Settings → **Authorized domains** → add the Vercel domain.
 
 ## How auth works
 
