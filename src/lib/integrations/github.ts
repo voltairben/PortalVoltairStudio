@@ -57,7 +57,10 @@ function deploymentStatusEvent(body: GithubWebhookBody): {
   if (!state) return { events: [], deployment: null };
 
   const url = ds.environment_url ?? ds.target_url ?? null;
-  const branch = body.deployment?.ref ?? null;
+  // Vercel's deployment_status payload puts the commit SHA in `ref`, not a branch
+  // name — show a short SHA rather than a 40-char string in the branch chip.
+  const rawRef = body.deployment?.ref ?? null;
+  const branch = rawRef && /^[0-9a-f]{40}$/i.test(rawRef) ? rawRef.slice(0, 7) : rawRef;
   const createdAt = ds.created_at
     ? new Date(ds.created_at).toISOString()
     : new Date().toISOString();

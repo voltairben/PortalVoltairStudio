@@ -168,6 +168,18 @@ describe("normalizeGithubEvent", () => {
     expect(events[0]?.state).toBe("ready");
   });
 
+  it("shortens a commit-SHA ref to 7 chars in the deployment branch chip", () => {
+    const { deployment } = normalizeGithubEvent(
+      "deployment_status",
+      "d-sha",
+      JSON.stringify({
+        deployment_status: { state: "success" },
+        deployment: { id: 1, ref: "bf8a580c93d347b1f7b6ed634d9a441a2777011d" },
+      }),
+    );
+    expect(deployment?.branch).toBe("bf8a580");
+  });
+
   it("maps deployment_status pending → building and error → error", () => {
     const build = normalizeGithubEvent(
       "deployment_status",
