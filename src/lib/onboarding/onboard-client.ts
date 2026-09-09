@@ -139,8 +139,9 @@ export async function onboardClient(
     });
     emailSent = true;
     emailId = result.id;
-  } catch {
+  } catch (error) {
     emailSent = false;
+    console.error(`[onboardClient] onboarding email to ${input.email} failed:`, error);
   }
 
   return { clientId, uid: user.uid, tempPassword, projectId, emailSent, emailId };
