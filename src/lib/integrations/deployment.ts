@@ -31,3 +31,8 @@ export const DEPLOY_TITLE: Record<DeploymentState, string> = {
   error: "Deployment failed",
   canceled: "Deployment canceled",
 };
+
+/** Vercel's deployment_status payload puts the commit SHA in `ref` — show 7 chars. */
+export function shortRef(ref: string | null): string | null {
+  return ref && /^[0-9a-f]{40}$/i.test(ref) ? ref.slice(0, 7) : ref;
+}

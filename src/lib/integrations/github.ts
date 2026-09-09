@@ -1,4 +1,4 @@
-import { DEPLOY_TITLE, toDeploymentState } from "@/lib/integrations/deployment";
+import { DEPLOY_TITLE, shortRef, toDeploymentState } from "@/lib/integrations/deployment";
 import type { ProjectDeployment, PulseDraft } from "@/types";
 
 /**
@@ -7,6 +7,10 @@ import type { ProjectDeployment, PulseDraft } from "@/types";
  *  - deployment_status   → Vercel's build state, forwarded by GitHub (no Pro plan
  *    needed): also yields a `deployment` patch for the project doc
  * Returns empty for events we don't surface.
+ *
+ * `dedupeKey`s are derived from event CONTENT (commit SHA, PR number + action,
+ * deployment-status id), never from `x-github-delivery` — so a manual re-delivery
+ * overwrites the same pulse doc instead of creating a duplicate.
  */
 export interface GithubNormalized {
   repo: string | null; // "owner/repo" lowercased
@@ -18,31 +22,30 @@ export interface GithubNormalized {
 const MAX_COMMITS = 15;
 const BOT_LOGINS = new Set(["dependabot", "dependabot[bot]", "github-actions", "github-actions[bot]", "renovate", "renovate[bot]"]);
 const HANDLED_PR_ACTIONS = new Set(["opened", "reopened", "closed", "ready_for_review"]);
+const HANDLED_EVENTS = new Set(["push", "pull_request", "deployment_status", "ping"]);
 
-export function normalizeGithubEvent(
-  eventName: string | null,
-  deliveryId: string | null,
-  rawBody: string,
-): GithubNormalized {
+const EMPTY: GithubNormalized = { repo: null, events: [], deployment: null };
+
+export function normalizeGithubEvent(eventName: string | null, rawBody: string): GithubNormalized {
   let body: GithubWebhookBody;
   try {
     body = JSON.parse(rawBody) as GithubWebhookBody;
-  } catch {
-    return { repo: null, events: [], deployment: null };
+  } catch (error) {
+    console.warn(
+      `[webhook/github] ${eventName ?? "?"} payload is not valid JSON ` +
+        `(${rawBody.slice(0, 60)}…): ${(error as Error).message}`,
+    );
+    return EMPTY;
   }
 
   const repo = body.repository?.full_name?.toLowerCase() ?? null;
-  const delivery = deliveryId ?? "gh";
+  if (!repo && HANDLED_EVENTS.has(eventName ?? "")) {
+    console.warn(`[webhook/github] ${eventName} payload has no repository.full_name`);
+  }
 
-  if (eventName === "push") {
-    return { repo, events: pushEvents(body, delivery), deployment: null };
-  }
-  if (eventName === "pull_request") {
-    return { repo, events: pullRequestEvents(body, delivery), deployment: null };
-  }
-  if (eventName === "deployment_status") {
-    return { repo, ...deploymentStatusEvent(body) };
-  }
+  if (eventName === "push") return { repo, events: pushEvents(body), deployment: null };
+  if (eventName === "pull_request") return { repo, events: pullRequestEvents(body), deployment: null };
+  if (eventName === "deployment_status") return { repo, ...deploymentStatusEvent(body) };
   return { repo, events: [], deployment: null };
 }
 
@@ -51,16 +54,23 @@ function deploymentStatusEvent(body: GithubWebhookBody): {
   deployment: ProjectDeployment | null;
 } {
   const ds = body.deployment_status;
-  if (!ds?.state) return { events: [], deployment: null };
+  if (!ds?.state) {
+    console.warn("[webhook/github] deployment_status payload has no deployment_status.state");
+    return { events: [], deployment: null };
+  }
 
   const state = toDeploymentState(ds.state);
-  if (!state) return { events: [], deployment: null };
+  if (!state) {
+    console.warn(`[webhook/github] deployment_status state "${ds.state}" is not surfaced (skipped)`);
+    return { events: [], deployment: null };
+  }
 
   const url = ds.environment_url ?? ds.target_url ?? null;
-  // Vercel's deployment_status payload puts the commit SHA in `ref`, not a branch
-  // name — show a short SHA rather than a 40-char string in the branch chip.
-  const rawRef = body.deployment?.ref ?? null;
-  const branch = rawRef && /^[0-9a-f]{40}$/i.test(rawRef) ? rawRef.slice(0, 7) : rawRef;
+  if (!url) {
+    console.warn(`[webhook/github] deployment_status "${ds.state}" has no environment_url/target_url`);
+  }
+
+  const branch = shortRef(body.deployment?.ref ?? null);
   const createdAt = ds.created_at
     ? new Date(ds.created_at).toISOString()
     : new Date().toISOString();
@@ -84,13 +94,13 @@ function deploymentStatusEvent(body: GithubWebhookBody): {
     actorName: null, // the deploy bot, not a person
     actorAvatar: null,
     createdAt,
-    dedupeKey: `ds-${body.deployment?.id ?? "d"}-${ds.id ?? state}`,
+    dedupeKey: `deploy-${ds.id ?? body.deployment?.id ?? state}`,
   };
 
   return { events: [pulse], deployment };
 }
 
-function pushEvents(body: GithubWebhookBody, delivery: string): PulseDraft[] {
+function pushEvents(body: GithubWebhookBody): PulseDraft[] {
   if (body.deleted || !body.ref?.startsWith("refs/heads/")) return [];
   const branch = body.ref.replace("refs/heads/", "");
   const avatar = body.sender?.avatar_url ?? null;
@@ -108,18 +118,17 @@ function pushEvents(body: GithubWebhookBody, delivery: string): PulseDraft[] {
       actorName: c.author?.name ?? c.author?.username ?? null,
       actorAvatar: avatar,
       createdAt: c.timestamp ? new Date(c.timestamp).toISOString() : new Date().toISOString(),
-      dedupeKey: `${delivery}-${c.id}`,
+      // Commit SHA is globally unique + immutable — a re-delivery hits the same doc.
+      dedupeKey: `commit-${c.id}`,
     }));
 }
 
-function pullRequestEvents(body: GithubWebhookBody, delivery: string): PulseDraft[] {
+function pullRequestEvents(body: GithubWebhookBody): PulseDraft[] {
   const pr = body.pull_request;
   if (!pr || !HANDLED_PR_ACTIONS.has(body.action ?? "")) return [];
 
-  const state =
-    body.action === "closed" ? (pr.merged ? "merged" : "closed") : "open";
-  const verb =
-    state === "merged" ? "merged" : body.action === "closed" ? "closed" : "opened";
+  const state = body.action === "closed" ? (pr.merged ? "merged" : "closed") : "open";
+  const verb = state === "merged" ? "merged" : body.action === "closed" ? "closed" : "opened";
 
   return [
     {
@@ -131,10 +140,9 @@ function pullRequestEvents(body: GithubWebhookBody, delivery: string): PulseDraf
       state,
       actorName: pr.user?.login ?? body.sender?.login ?? null,
       actorAvatar: pr.user?.avatar_url ?? body.sender?.avatar_url ?? null,
-      createdAt: pr.updated_at
-        ? new Date(pr.updated_at).toISOString()
-        : new Date().toISOString(),
-      dedupeKey: `${delivery}-pr${pr.number}-${verb}`,
+      createdAt: pr.updated_at ? new Date(pr.updated_at).toISOString() : new Date().toISOString(),
+      // PR number + resolved verb — a re-delivery of the same transition overwrites.
+      dedupeKey: `pr-${pr.number ?? "x"}-${verb}`,
     },
   ];
 }

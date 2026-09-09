@@ -24,12 +24,13 @@ export function normalizeVercelEvent(rawBody: string): VercelNormalized | null {
   let body: VercelWebhookBody;
   try {
     body = JSON.parse(rawBody) as VercelWebhookBody;
-  } catch {
+  } catch (error) {
+    console.warn(`[webhook/vercel] payload is not valid JSON: ${(error as Error).message}`);
     return null;
   }
 
   const state = STATE_BY_TYPE[body.type ?? ""];
-  if (!state) return null;
+  if (!state) return null; // an event type we don't surface — normal, no warn
 
   const d = body.payload?.deployment ?? {};
   const meta = d.meta ?? {};

@@ -36,8 +36,8 @@ export default defineConfig({
           name: "unit",
           environment: "node",
           globals: true,
-          // Pure logic tests co-located with source — no emulator needed.
-          include: ["src/**/*.test.ts"],
+          // Pure logic + route-handler tests — no emulator needed.
+          include: ["src/**/*.test.ts", "tests/unit/**/*.test.ts"],
         },
       },
     ],

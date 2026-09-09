@@ -1,5 +1,5 @@
 import { createHmac } from "node:crypto";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { normalizeGithubEvent } from "./github";
 import { normalizeVercelEvent } from "./vercel";
 import { verifyGithubSignature, verifyVercelSignature } from "./verify";
@@ -83,10 +83,9 @@ describe("normalizeVercelEvent", () => {
 });
 
 describe("normalizeGithubEvent", () => {
-  it("keeps human commits and drops bots + merge commits", () => {
+  it("keeps human commits and drops bots + merge commits, keys by commit SHA", () => {
     const { repo, events } = normalizeGithubEvent(
       "push",
-      "delivery-1",
       JSON.stringify({
         ref: "refs/heads/main",
         repository: { full_name: "acme/site" },
@@ -101,13 +100,12 @@ describe("normalizeGithubEvent", () => {
     expect(repo).toBe("acme/site");
     expect(events).toHaveLength(1);
     expect(events[0]?.title).toBe("Add cookie banner");
-    expect(events[0]?.dedupeKey).toBe("delivery-1-a1");
+    expect(events[0]?.dedupeKey).toBe("commit-a1"); // no x-github-delivery in the key
   });
 
-  it("surfaces a merged pull_request as state=merged", () => {
+  it("surfaces a merged pull_request as state=merged, keyed by number+verb", () => {
     const { events } = normalizeGithubEvent(
       "pull_request",
-      "delivery-2",
       JSON.stringify({
         action: "closed",
         repository: { full_name: "acme/site" },
@@ -125,10 +123,26 @@ describe("normalizeGithubEvent", () => {
     expect(events).toHaveLength(1);
     expect(events[0]?.state).toBe("merged");
     expect(events[0]?.kind).toBe("pull-request");
+    expect(events[0]?.dedupeKey).toBe("pr-7-merged");
   });
 
   it("ignores unhandled events", () => {
-    expect(normalizeGithubEvent("issues", "d", "{}").events).toHaveLength(0);
+    expect(normalizeGithubEvent("issues", "{}").events).toHaveLength(0);
+  });
+
+  it("warns and returns empty on a non-JSON body", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const result = normalizeGithubEvent("push", "not json at all");
+    expect(result.events).toHaveLength(0);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("not valid JSON"));
+    warn.mockRestore();
+  });
+
+  it("warns when a handled event has no repository.full_name", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    normalizeGithubEvent("push", JSON.stringify({ ref: "refs/heads/main", commits: [] }));
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("no repository.full_name"));
+    warn.mockRestore();
   });
 
   it("handles a form-urlencoded (`payload=…`) body once unwrapped", () => {
@@ -137,9 +151,8 @@ describe("normalizeGithubEvent", () => {
       repository: { full_name: "acme/site" },
       commits: [{ id: "z9", message: "Polish the footer", url: "u", author: { name: "Ben" } }],
     });
-    const formBody = `payload=${encodeURIComponent(json)}`;
-    const unwrapped = new URLSearchParams(formBody).get("payload") ?? "{}";
-    const { events } = normalizeGithubEvent("push", "d-7", unwrapped);
+    const unwrapped = new URLSearchParams(`payload=${encodeURIComponent(json)}`).get("payload") ?? "{}";
+    const { events } = normalizeGithubEvent("push", unwrapped);
     expect(events).toHaveLength(1);
     expect(events[0]?.title).toBe("Polish the footer");
   });
@@ -147,7 +160,6 @@ describe("normalizeGithubEvent", () => {
   it("maps a deployment_status success → ready with the environment url", () => {
     const { events, deployment } = normalizeGithubEvent(
       "deployment_status",
-      "d-3",
       JSON.stringify({
         deployment_status: {
           id: 99,
@@ -166,14 +178,14 @@ describe("normalizeGithubEvent", () => {
     expect(events).toHaveLength(1);
     expect(events[0]?.kind).toBe("deployment");
     expect(events[0]?.state).toBe("ready");
+    expect(events[0]?.dedupeKey).toBe("deploy-99");
   });
 
   it("shortens a commit-SHA ref to 7 chars in the deployment branch chip", () => {
     const { deployment } = normalizeGithubEvent(
       "deployment_status",
-      "d-sha",
       JSON.stringify({
-        deployment_status: { state: "success" },
+        deployment_status: { state: "success", environment_url: "https://x.vercel.app" },
         deployment: { id: 1, ref: "bf8a580c93d347b1f7b6ed634d9a441a2777011d" },
       }),
     );
@@ -183,26 +195,26 @@ describe("normalizeGithubEvent", () => {
   it("maps deployment_status pending → building and error → error", () => {
     const build = normalizeGithubEvent(
       "deployment_status",
-      "d-4",
       JSON.stringify({ deployment_status: { state: "pending" }, deployment: { id: 1 } }),
     );
     expect(build.deployment?.state).toBe("building");
 
     const fail = normalizeGithubEvent(
       "deployment_status",
-      "d-5",
       JSON.stringify({ deployment_status: { state: "failure" }, deployment: { id: 1 } }),
     );
     expect(fail.deployment?.state).toBe("error");
   });
 
-  it("skips a deployment_status 'inactive' (superseded) event", () => {
+  it("skips + warns on a deployment_status 'inactive' (superseded) event", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { events, deployment } = normalizeGithubEvent(
       "deployment_status",
-      "d-6",
       JSON.stringify({ deployment_status: { state: "inactive" }, deployment: { id: 1 } }),
     );
     expect(deployment).toBeNull();
     expect(events).toHaveLength(0);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining("not surfaced"));
+    warn.mockRestore();
   });
 });

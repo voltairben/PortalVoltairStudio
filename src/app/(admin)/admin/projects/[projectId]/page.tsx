@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { MilestoneEditor } from "@/components/admin/milestone-editor";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProjectEditForm } from "@/components/admin/project-edit-form";
+import { ReconcileDeploymentButton } from "@/components/admin/reconcile-deployment-button";
 import { DeliverableStatusBadge } from "@/components/portal/deliverable-status";
 import { FileTypeIcon } from "@/components/portal/file-type-icon";
 import { getAdminProject } from "@/lib/data/admin";
@@ -65,6 +66,21 @@ export default async function AdminProjectPage({ params }: { params: Params }) {
           <MilestoneEditor projectId={project.projectId} milestones={project.milestones} />
         </section>
       </div>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold text-ink">Developer Pulse</h2>
+        <div className="rounded-xl border border-zinc-800 bg-surface-1 p-4">
+          <ReconcileDeploymentButton
+            projectId={project.projectId}
+            state={project.deployment?.state ?? null}
+          />
+          {!project.githubRepo && (
+            <p className="mt-2 text-[11px] text-ink-subtle">
+              Set a GitHub repo above so webhook events reach this project.
+            </p>
+          )}
+        </div>
+      </section>
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-ink">

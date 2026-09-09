@@ -6,6 +6,9 @@ import { writeActivity } from "@/lib/activity";
 import { sendOnboardingEmail } from "@/lib/email/send";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { getCurrentUser, type SessionUser } from "@/lib/firebase/session";
+import { shortRef, toDeploymentState } from "@/lib/integrations/deployment";
+import { normalizeRepo } from "@/lib/integrations/repo";
+import { setProjectDeployment } from "@/lib/integrations/pulse-store";
 import {
   OnboardError,
   type OnboardResult,
@@ -24,6 +27,7 @@ import {
   type Deliverable,
   type Milestone,
   type Project,
+  type ProjectDeployment,
 } from "@/types";
 
 type ActionResult<T = unknown> = ({ ok: true } & T) | { ok: false; error: string };
@@ -295,4 +299,92 @@ export async function deleteClientCompany(
   revalidatePath("/admin/clients");
   revalidatePath("/admin");
   return { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Developer Pulse — manual deployment-status reconcile
+// ---------------------------------------------------------------------------
+
+interface GhDeployment {
+  id: number;
+  ref?: string;
+}
+interface GhStatus {
+  state?: string;
+  environment_url?: string;
+  target_url?: string;
+  created_at?: string;
+}
+
+/**
+ * Re-check (or clear) a project's deployment badge — for when a webhook delivery
+ * was missed and the badge is stuck. Queries the GitHub Deployments API for the
+ * latest status; if that can't be resolved, clears the badge so the next real
+ * webhook repopulates it.
+ */
+export async function reconcileProjectDeploymentStatus(
+  projectId: unknown,
+): Promise<ActionResult<{ state: string | null }>> {
+  const actor = await adminActor();
+  if (!actor) return { ok: false, error: "Not authorized." };
+  if (typeof projectId !== "string" || !projectId) return { ok: false, error: "Missing project id." };
+
+  const ref = adminDb.collection(COLLECTIONS.projects).doc(projectId);
+  const snap = await ref.get();
+  if (!snap.exists) return { ok: false, error: "Project not found." };
+  const project = snap.data() as Project;
+
+  const repo = project.githubRepo ? normalizeRepo(project.githubRepo) : null;
+  const resolved = repo ? await fetchLatestDeployment(repo) : null;
+
+  if (resolved) {
+    await setProjectDeployment(projectId, resolved);
+  } else {
+    // Couldn't determine a state — clear the (possibly stuck) badge.
+    await ref.update({ deployment: null });
+  }
+
+  revalidatePath(`/admin/projects/${projectId}`);
+  revalidatePath(`/projects/${projectId}`);
+  return { ok: true, state: resolved?.state ?? null };
+}
+
+async function fetchLatestDeployment(repo: string): Promise<ProjectDeployment | null> {
+  const headers: Record<string, string> = {
+    accept: "application/vnd.github+json",
+    "user-agent": "voltair-portal",
+  };
+  if (process.env.GITHUB_TOKEN) headers.authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+
+  try {
+    const depRes = await fetch(
+      `https://api.github.com/repos/${repo}/deployments?per_page=1`,
+      { headers },
+    );
+    if (!depRes.ok) return null;
+    const dep = ((await depRes.json()) as GhDeployment[])[0];
+    if (!dep) return null;
+
+    const stRes = await fetch(
+      `https://api.github.com/repos/${repo}/deployments/${dep.id}/statuses?per_page=1`,
+      { headers },
+    );
+    if (!stRes.ok) return null;
+    const st = ((await stRes.json()) as GhStatus[])[0];
+
+    const state = st?.state ? toDeploymentState(st.state) : null;
+    if (!state) return null;
+
+    return {
+      state,
+      url: st.environment_url ?? st.target_url ?? null,
+      deploymentId: String(dep.id),
+      branch: shortRef(dep.ref ?? null),
+      durationMs: null,
+      updatedAt: st.created_at ? new Date(st.created_at).toISOString() : new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error("[reconcileProjectDeploymentStatus] GitHub API failed", error);
+    return null;
+  }
 }

@@ -34,11 +34,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ ok: true, pong: true });
   }
 
-  const { repo, events, deployment } = normalizeGithubEvent(
-    eventName,
-    request.headers.get("x-github-delivery"),
-    body,
-  );
+  const { repo, events, deployment } = normalizeGithubEvent(eventName, body);
   if (events.length === 0 && !deployment) {
     return NextResponse.json({ ok: true, skipped: "no surfaced activity" });
   }

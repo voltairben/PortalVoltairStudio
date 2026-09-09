@@ -22,29 +22,49 @@ export async function findProjectByRepo(repo: string | null): Promise<Project | 
   return null;
 }
 
-/** Overwrite the project's current deployment state (Vercel webhook). */
+/** True only for a non-empty http/https URL string. */
+export function isHttpUrl(value: string | null | undefined): value is string {
+  if (!value) return false;
+  try {
+    const u = new URL(value);
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Overwrite the project's current deployment state.
+ *
+ * The client-facing `vercelPreviewUrl` is refreshed ONLY from a real, successful
+ * deploy URL — a payload that omits the URL (or carries a bad one) never clears a
+ * curated value.
+ */
 export async function setProjectDeployment(
   projectId: string,
   deployment: ProjectDeployment,
 ): Promise<void> {
   const patch: Record<string, unknown> = { deployment };
-  // A successful deploy also refreshes the preview link the client sees.
-  if (deployment.state === "ready" && deployment.url) {
+  if (deployment.state === "ready" && isHttpUrl(deployment.url)) {
     patch.vercelPreviewUrl = deployment.url;
   }
   await adminDb.collection(COLLECTIONS.projects).doc(projectId).update(patch);
 }
 
 /**
- * Append pulse entries for a project. The doc id is derived from the provider's
- * event id, so a webhook re-delivery overwrites rather than duplicates.
+ * Append pulse entries for a project. The doc id is
+ * `{source}_{projectId}_{contentKey}` — derived from event content (commit SHA,
+ * PR number, deployment id), never the `x-github-delivery` header — so a manual
+ * webhook re-delivery overwrites the same doc rather than duplicating it.
  */
 export async function writePulseEvents(project: Project, drafts: PulseDraft[]): Promise<void> {
   if (drafts.length === 0) return;
   const batch = adminDb.batch();
 
   for (const { dedupeKey, ...rest } of drafts) {
-    const id = `${rest.source}_${dedupeKey}`.replace(/[^A-Za-z0-9_-]/g, "_").slice(0, 400);
+    const id = `${rest.source}_${project.projectId}_${dedupeKey}`
+      .replace(/[^A-Za-z0-9_-]/g, "_")
+      .slice(0, 400);
     const ref = adminDb.collection(COLLECTIONS.pulseEvents).doc(id);
     const event: PulseEvent = {
       ...rest,
