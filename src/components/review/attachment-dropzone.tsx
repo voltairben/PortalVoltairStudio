@@ -51,7 +51,8 @@ export function AttachmentDropzone({
       return;
     }
 
-    const path = `attachments/${clientId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${file.name}`;
+    const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+    const path = `attachments/${clientId}/${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safeName}`;
     const task = uploadBytesResumable(ref(storage, path), file, { contentType: file.type });
     setUploading({ name: file.name, progress: 0 });
 

@@ -27,7 +27,11 @@ service firebase.storage {
 
     match /attachments/{clientId}/{allPaths=**} {
       allow read: if isAdmin() || isClientOf(clientId);
-      allow write: if isAdmin() || isClientOf(clientId);
+      // Client-writable — cap size + type so a leaked client token can't run up
+      // the Storage bill or stash arbitrary files.
+      allow write: if (isAdmin() || isClientOf(clientId))
+        && request.resource.size < 50 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*|video/.*|application/pdf');
     }
 
     // Everything else is denied by default.

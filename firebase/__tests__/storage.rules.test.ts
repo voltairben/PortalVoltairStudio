@@ -34,16 +34,31 @@ describe("storage — deliverable files (studio uploads, tenant reads)", () => {
 });
 
 describe("storage — feedback attachments (tenant reads + writes)", () => {
-  it("client A uploads an attachment into its own tenant folder", async () => {
+  it("client A uploads an image attachment into its own tenant folder", async () => {
     const storage = st(clientCtx(USER_A, CLIENT_A));
     await assertSucceeds(
-      uploadString(ref(storage, `attachments/${CLIENT_A}/note.png`), "my ref"),
+      uploadString(ref(storage, `attachments/${CLIENT_A}/note.png`), "my ref", "raw", {
+        contentType: "image/png",
+      }),
+    );
+  });
+
+  it("client A cannot upload a non-media attachment (contentType guard)", async () => {
+    const storage = st(clientCtx(USER_A, CLIENT_A));
+    await assertFails(
+      uploadString(ref(storage, `attachments/${CLIENT_A}/payload.txt`), "x", "raw", {
+        contentType: "text/plain",
+      }),
     );
   });
 
   it("client A cannot upload into client B's attachment folder", async () => {
     const storage = st(clientCtx(USER_A, CLIENT_A));
-    await assertFails(uploadString(ref(storage, `attachments/${CLIENT_B}/steal.png`), "nope"));
+    await assertFails(
+      uploadString(ref(storage, `attachments/${CLIENT_B}/steal.png`), "nope", "raw", {
+        contentType: "image/png",
+      }),
+    );
   });
 
   it("client A cannot read client B's attachment", async () => {
