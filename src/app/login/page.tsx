@@ -31,7 +31,6 @@ export default async function LoginPage({
       <div className="brand-glow pointer-events-none absolute inset-x-0 top-0 h-80" />
 
       <div className="relative flex w-full max-w-sm flex-col items-center">
-        <h1 className="sr-only">Voltair Studio Portal</h1>
         <Image
           src="/brand/voltair-logo.png"
           alt="Voltair Studio"
@@ -40,7 +39,10 @@ export default async function LoginPage({
           priority
           className="h-24 w-auto drop-shadow-[0_0_36px_rgba(255,79,0,0.4)]"
         />
-        <p className="mt-6 text-center text-sm text-ink-muted">
+        <h1 className="mt-6 text-center text-lg font-medium tracking-tight text-ink">
+          Welcome to Portal Voltair
+        </h1>
+        <p className="mt-1.5 text-center text-sm text-ink-muted">
           Sign in to view your projects and deliverables.
         </p>
 
