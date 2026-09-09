@@ -218,3 +218,80 @@ export async function postStudioReply(input: unknown): Promise<ActionResult> {
   revalidatePath(`/projects/${d.projectId}/deliverables/${d.deliverableId}`);
   return { ok: true };
 }
+
+// ---------------------------------------------------------------------------
+// Client archive / delete
+// ---------------------------------------------------------------------------
+
+/** Archive a client (hides them from active pickers) or restore them. Reversible. */
+export async function setClientArchived(
+  clientId: unknown,
+  archived: unknown,
+): Promise<ActionResult> {
+  const actor = await adminActor();
+  if (!actor) return { ok: false, error: "Not authorized." };
+  if (typeof clientId !== "string" || !clientId) return { ok: false, error: "Missing client id." };
+
+  const ref = adminDb.collection(COLLECTIONS.clients).doc(clientId);
+  if (!(await ref.get()).exists) return { ok: false, error: "Client not found." };
+
+  await ref.update({ status: archived ? "archived" : "active" });
+  // ponytail: no activity-feed entry — the status badge on the row is the signal.
+  revalidatePath("/admin/clients");
+  revalidatePath("/admin");
+  return { ok: true };
+}
+
+/**
+ * Permanently removes a client: their Auth login(s), profile, and every project,
+ * deliverable, comment and activity row carrying their clientId. Irreversible.
+ * `confirmName` must match the company name exactly.
+ */
+export async function deleteClientCompany(
+  clientId: unknown,
+  confirmName: unknown,
+): Promise<ActionResult> {
+  const actor = await adminActor();
+  if (!actor) return { ok: false, error: "Not authorized." };
+  if (typeof clientId !== "string" || !clientId) return { ok: false, error: "Missing client id." };
+
+  const ref = adminDb.collection(COLLECTIONS.clients).doc(clientId);
+  const snap = await ref.get();
+  if (!snap.exists) return { ok: false, error: "Client not found." };
+  const client = snap.data() as ClientCompany;
+
+  if (typeof confirmName !== "string" || confirmName.trim() !== client.name) {
+    return { ok: false, error: "Type the company name exactly to confirm." };
+  }
+
+  // Collect every login tied to this tenant, then remove the Auth accounts.
+  const userDocs = (
+    await adminDb.collection(COLLECTIONS.users).where("clientId", "==", clientId).get()
+  ).docs;
+  const uids = new Set(userDocs.map((d) => d.id));
+  if (client.primaryContactUid) uids.add(client.primaryContactUid);
+  for (const uid of uids) {
+    await adminAuth.deleteUser(uid).catch((e) => console.error("[deleteClientCompany] auth", e));
+  }
+
+  // Wipe every tenant-scoped collection (Firestore batches cap at 500 writes).
+  for (const coll of [
+    COLLECTIONS.users,
+    COLLECTIONS.projects,
+    COLLECTIONS.deliverables,
+    COLLECTIONS.comments,
+    COLLECTIONS.activity,
+  ]) {
+    const docs = (await adminDb.collection(coll).where("clientId", "==", clientId).get()).docs;
+    for (let i = 0; i < docs.length; i += 400) {
+      const batch = adminDb.batch();
+      for (const d of docs.slice(i, i + 400)) batch.delete(d.ref);
+      await batch.commit();
+    }
+  }
+
+  await ref.delete();
+  revalidatePath("/admin/clients");
+  revalidatePath("/admin");
+  return { ok: true };
+}
