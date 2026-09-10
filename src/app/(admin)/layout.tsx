@@ -14,7 +14,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <AdminMobileNav />
       <AdminBottomNav />
       <div className="lg:pl-[248px]">
-        <main className="mx-auto min-h-[calc(100dvh-52px)] w-full max-w-6xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-7 sm:px-6 lg:min-h-dvh lg:px-10 lg:py-10">
+        <main className="mx-auto min-h-[calc(100dvh-3.5rem-env(safe-area-inset-top))] w-full max-w-6xl px-4 pb-[calc(6rem+env(safe-area-inset-bottom))] pt-7 sm:px-6 lg:min-h-dvh lg:px-10 lg:py-10">
           {children}
         </main>
       </div>
