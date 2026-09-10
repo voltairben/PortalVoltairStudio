@@ -55,3 +55,6 @@ scratch-*.log
 /android/app/src/main/res/xml/config.xml
 /ios/App/App/public
 /ios/App/App/capacitor.config.json
+# `@capacitor/assets generate` drops a stray PWA manifest here — app/manifest.ts is the real one
+/public/manifest.webmanifest
+/android/.idea/

@@ -261,6 +261,11 @@ npx @capacitor/assets generate \
 npx cap sync
 ```
 
+`@capacitor/assets generate` also drops a stray `public/manifest.webmanifest`
+with broken icon paths. Delete it — `src/app/manifest.ts` is the real manifest,
+and the stray file makes `next dev` throw a 500 on `/manifest.webmanifest`
+(it's git-ignored, so it never reaches production).
+
 ### 4.2 Build & run
 
 ```bash
