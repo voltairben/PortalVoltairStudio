@@ -20,6 +20,8 @@
 - Motion near zero: one route-load settle at most, hover transitions ≤ 150 ms. Respect the existing `prefers-reduced-motion` block.
 - No changes to auth, RBAC, Firestore rules, the tenant model, or any `src/lib/data/**` write path. Phase A adds **one read accessor** and touches no writes.
 - Verify scripts must stay green: `node --env-file=.env.local scripts/phase3-verify.mjs` (client, 13 checks) and `scripts/phase4-verify.mjs` (admin, 11 checks). They need the emulator suite + `npm run dev` + `npm run seed`.
+- **No React component-test framework is added.** The repo has no `@testing-library/react` / jsdom and no component tests. New presentational components (hero, attention panel, project list) are verified by `phase3-verify` (renders the real dashboard against emulators) + `npm run build` + screenshots. Pure logic (`milestoneStats`) gets a Node-env `*.test.ts` in the existing `unit` project.
+- Executed on branch `redesign/portal-phase-a`; merges to `main` only after the full Task 10 regression passes and the user has seen it.
 - Commit messages end with `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`. `.claude/` and `.codex/` stay unstaged. Commit only the files each task lists.
 
 ---
@@ -200,27 +202,26 @@ git commit -m "$(printf 'feat(design): Sentient + Satoshi typography, self-hoste
 
 **Files:**
 - Modify: `src/components/portal/milestone-progress.tsx`
-- Test: `src/components/portal/milestone-progress.test.tsx` (create)
+- Test: `src/components/portal/milestone-progress.test.ts` (create — Node env, pure logic only)
 
 **Interfaces:**
 - Consumes: `Milestone[]` from `@/types` (unchanged).
-- Produces: `MilestoneProgress` now accepts `tone?: "neutral" | "active"` (default `"neutral"`). `milestoneStats(milestones)` unchanged. `neutral` renders the bar fill as `bg-line-strong` and the count in `text-ink-subtle`; `active` renders both in persimmon.
+- Produces: `MilestoneProgress` now accepts `tone?: "neutral" | "active"` (default `"neutral"`). `milestoneStats(milestones)` unchanged. `neutral` renders the bar fill (`[data-fill]`) as `bg-line-strong` and the count in `text-ink-subtle`; `active` renders both in persimmon.
 
 - [ ] **Step 1: Write the failing test**
 
-`src/components/portal/milestone-progress.test.tsx`:
+`src/components/portal/milestone-progress.test.ts` (pure logic — no rendering, runs in the Node-env `unit` project):
 
-```tsx
-import { render } from "@testing-library/react";
+```ts
 import { describe, expect, it } from "vitest";
-import { MilestoneProgress, milestoneStats } from "./milestone-progress";
+import { milestoneStats } from "./milestone-progress";
 import type { Milestone } from "@/types";
 
 const m = (status: Milestone["status"]): Milestone =>
-  ({ id: crypto.randomUUID(), title: "x", status, order: 0 }) as Milestone;
+  ({ id: "x", title: "x", status, order: 0 }) as Milestone;
 
-describe("MilestoneProgress", () => {
-  it("counts completed milestones", () => {
+describe("milestoneStats", () => {
+  it("counts completed milestones and a rounded percentage", () => {
     expect(milestoneStats([m("complete"), m("complete"), m("active")])).toEqual({
       total: 3,
       done: 2,
@@ -228,26 +229,16 @@ describe("MilestoneProgress", () => {
     });
   });
 
-  it("defaults to a neutral bar (no persimmon fill)", () => {
-    const { container } = render(<MilestoneProgress milestones={[m("complete"), m("active")]} />);
-    const fill = container.querySelector("[data-fill]")!;
-    expect(fill.className).toContain("bg-line-strong");
-    expect(fill.className).not.toContain("bg-brand-persimmon");
-  });
-
-  it('tone="active" uses persimmon', () => {
-    const { container } = render(
-      <MilestoneProgress tone="active" milestones={[m("complete"), m("active")]} />,
-    );
-    expect(container.querySelector("[data-fill]")!.className).toContain("bg-brand-persimmon");
+  it("is 0% for an empty list", () => {
+    expect(milestoneStats([])).toEqual({ total: 0, done: 0, pct: 0 });
   });
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [ ] **Step 2: Run it, verify it passes (logic already exists)**
 
-Run: `npx vitest run --project unit src/components/portal/milestone-progress.test.tsx`
-Expected: FAIL — `tone` prop and `data-fill` attribute don't exist yet.
+Run: `npx vitest run --project unit src/components/portal/milestone-progress.test.ts`
+Expected: PASS — `milestoneStats` is unchanged; this test just locks its behaviour before the `tone` edit. The `tone` prop / `data-fill` are verified by the dashboard screenshot in Task 8 and the `phase3-verify` bar check.
 
 - [ ] **Step 3: Implement**
 
@@ -318,15 +309,15 @@ export function MilestoneProgress({
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [ ] **Step 4: Run tests + build**
 
-Run: `npx vitest run --project unit src/components/portal/milestone-progress.test.tsx`
-Expected: PASS (3 tests).
+Run: `npx vitest run --project unit src/components/portal/milestone-progress.test.ts && npm run build`
+Expected: test passes; build clean.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add src/components/portal/milestone-progress.tsx src/components/portal/milestone-progress.test.tsx
+git add src/components/portal/milestone-progress.tsx src/components/portal/milestone-progress.test.ts
 git commit -m "$(printf 'feat(design): neutral milestone bars, persimmon only for the client'\''s turn\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>')"
 ```
 
@@ -424,7 +415,8 @@ git commit -m "$(printf 'feat(portal): getClientDeliverables — all deliverable
 
 **Files:**
 - Create: `src/components/portal/latest-delivery-hero.tsx`
-- Test: `src/components/portal/latest-delivery-hero.test.tsx` (create)
+
+Verified via the Task 8 dashboard screenshot + the `phase3-verify` hero check (Task 8 Step 3). No unit test (presentational, no branching logic beyond the `pending ?? lastDecided` fallback).
 
 **Interfaces:**
 - Consumes: `Deliverable` from `@/types`; `formatDate` from `@/lib/format`.
@@ -437,63 +429,7 @@ git commit -m "$(printf 'feat(portal): getClientDeliverables — all deliverable
   ```
   Renders nothing (`null`) when both are null. When `pending` is set: the "review me" state — contained cover, eyebrow "New from Voltair Studio" (muted), Sentient title, persimmon **Open review** button linking to `/projects/{projectId}/deliverables/{deliverableId}`. Otherwise: the quiet state — same cover, "Latest delivery", an "Approved {date}" line, a neutral **View** link.
 
-- [ ] **Step 1: Write the failing test**
-
-`src/components/portal/latest-delivery-hero.test.tsx`:
-
-```tsx
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { LatestDeliveryHero } from "./latest-delivery-hero";
-import type { Deliverable } from "@/types";
-
-const base: Deliverable = {
-  deliverableId: "d1",
-  projectId: "p1",
-  clientId: "c1",
-  name: "Homepage designs",
-  version: 2,
-  versionLabel: "v2",
-  status: "pending",
-  decidedAt: null,
-  feedbackCount: 0,
-  createdAt: "2026-09-04T00:00:00.000Z",
-  fileUrl: "https://example.com/x.png",
-  fileType: "image",
-};
-
-describe("LatestDeliveryHero", () => {
-  it("renders nothing when there is no deliverable", () => {
-    const { container } = render(<LatestDeliveryHero pending={null} lastDecided={null} />);
-    expect(container).toBeEmptyDOMElement();
-  });
-
-  it("shows the review CTA for a pending deliverable", () => {
-    render(<LatestDeliveryHero pending={base} lastDecided={null} />);
-    const link = screen.getByRole("link", { name: /open review/i });
-    expect(link).toHaveAttribute("href", "/projects/p1/deliverables/d1");
-    expect(screen.getByText("Homepage designs")).toBeInTheDocument();
-  });
-
-  it("shows a quiet approved state when nothing is pending", () => {
-    render(
-      <LatestDeliveryHero
-        pending={null}
-        lastDecided={{ ...base, status: "approved", decidedAt: "2026-09-10T00:00:00.000Z" }}
-      />,
-    );
-    expect(screen.queryByRole("link", { name: /open review/i })).toBeNull();
-    expect(screen.getByText(/approved/i)).toBeInTheDocument();
-  });
-});
-```
-
-- [ ] **Step 2: Run it, verify it fails**
-
-Run: `npx vitest run --project unit src/components/portal/latest-delivery-hero.test.tsx`
-Expected: FAIL — module not found.
-
-- [ ] **Step 3: Implement**
+- [ ] **Step 1: Implement**
 
 `src/components/portal/latest-delivery-hero.tsx`:
 
@@ -567,15 +503,15 @@ export function LatestDeliveryHero({
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [ ] **Step 2: Build**
 
-Run: `npx vitest run --project unit src/components/portal/latest-delivery-hero.test.tsx`
-Expected: PASS (3 tests).
+Run: `npx tsc --noEmit && npm run build`
+Expected: clean.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add src/components/portal/latest-delivery-hero.tsx src/components/portal/latest-delivery-hero.test.tsx
+git add src/components/portal/latest-delivery-hero.tsx
 git commit -m "$(printf 'feat(portal): LatestDeliveryHero — dashboard hero for the newest deliverable\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>')"
 ```
 
@@ -585,7 +521,8 @@ git commit -m "$(printf 'feat(portal): LatestDeliveryHero — dashboard hero for
 
 **Files:**
 - Create: `src/components/portal/attention-panel.tsx`
-- Test: `src/components/portal/attention-panel.test.tsx` (create)
+
+Verified via the Task 8 dashboard screenshot + a `phase3-verify` text check (Task 8 Step 3). No unit test.
 
 **Interfaces:**
 - Consumes: nothing from other tasks (pure props).
@@ -598,44 +535,7 @@ git commit -m "$(printf 'feat(portal): LatestDeliveryHero — dashboard hero for
   ```
   Renders a bordered panel: heading "Needs your attention", a line "{n} deliverable(s) to review" (or "You're all caught up" when 0), then up to 4 `recent` rows under a divider. No persimmon.
 
-- [ ] **Step 1: Write the failing test**
-
-`src/components/portal/attention-panel.test.tsx`:
-
-```tsx
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { AttentionPanel } from "./attention-panel";
-
-describe("AttentionPanel", () => {
-  it("summarises the pending count", () => {
-    render(<AttentionPanel pendingCount={2} recent={[]} />);
-    expect(screen.getByText(/2 deliverables to review/i)).toBeInTheDocument();
-  });
-
-  it("shows a caught-up message at zero", () => {
-    render(<AttentionPanel pendingCount={0} recent={[]} />);
-    expect(screen.getByText(/all caught up/i)).toBeInTheDocument();
-  });
-
-  it("lists at most four recent items", () => {
-    render(
-      <AttentionPanel
-        pendingCount={0}
-        recent={Array.from({ length: 6 }, (_, i) => ({ label: `item ${i}`, when: "1d ago" }))}
-      />,
-    );
-    expect(screen.getAllByText(/item \d/)).toHaveLength(4);
-  });
-});
-```
-
-- [ ] **Step 2: Run it, verify it fails**
-
-Run: `npx vitest run --project unit src/components/portal/attention-panel.test.tsx`
-Expected: FAIL — module not found.
-
-- [ ] **Step 3: Implement**
+- [ ] **Step 1: Implement**
 
 `src/components/portal/attention-panel.tsx`:
 
@@ -672,15 +572,15 @@ export function AttentionPanel({
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [ ] **Step 2: Build**
 
-Run: `npx vitest run --project unit src/components/portal/attention-panel.test.tsx`
-Expected: PASS (3 tests).
+Run: `npx tsc --noEmit && npm run build`
+Expected: clean.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add src/components/portal/attention-panel.tsx src/components/portal/attention-panel.test.tsx
+git add src/components/portal/attention-panel.tsx
 git commit -m "$(printf 'feat(portal): AttentionPanel — dashboard summary of what needs the client\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>')"
 ```
 
@@ -690,10 +590,11 @@ git commit -m "$(printf 'feat(portal): AttentionPanel — dashboard summary of w
 
 **Files:**
 - Create: `src/components/portal/project-list.tsx`
-- Test: `src/components/portal/project-list.test.tsx` (create)
+
+Verified via the Task 8 dashboard + projects screenshots and the `phase3-verify` neutral/active bar check (Task 8 Step 3).
 
 **Interfaces:**
-- Consumes: `Project` from `@/types`; `MilestoneProgress` + `milestoneStats` (Task 2); `STAGE_LABELS` from `@/types`; `Badge`.
+- Consumes: `Project` from `@/types`; `MilestoneProgress` (Task 2); `STAGE_LABELS` from `@/types`; `Badge`.
 - Produces:
   ```ts
   export function ProjectList(props: {
@@ -701,63 +602,9 @@ git commit -m "$(printf 'feat(portal): AttentionPanel — dashboard summary of w
     awaitingClient?: Set<string>;   // projectIds whose latest deliverable is pending
   }): JSX.Element
   ```
-  A full-width list — each row links to `/projects/{projectId}`, shows the name (Sentient, via `<h3>`/`text-*` — inherits display font), a `MilestoneProgress` (tone `"active"` iff `awaitingClient.has(projectId)`), the `n / m` count, and a neutral stage `Badge`. Rows separated by `divide-y divide-line`. No wrapping card.
+  A full-width list — each row links to `/projects/{projectId}`, shows the name (via `<h3>` — inherits the display font), a `MilestoneProgress` (tone `"active"` iff `awaitingClient.has(projectId)`), and a neutral stage `Badge`. Rows separated by `divide-y divide-line`. No wrapping card.
 
-- [ ] **Step 1: Write the failing test**
-
-`src/components/portal/project-list.test.tsx`:
-
-```tsx
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
-import { ProjectList } from "./project-list";
-import type { Project } from "@/types";
-
-const project = (over: Partial<Project> = {}): Project =>
-  ({
-    projectId: "p1",
-    clientId: "c1",
-    name: "Marketing Website",
-    description: "Full redesign",
-    stage: "development",
-    status: "active",
-    milestones: [
-      { id: "1", title: "a", status: "complete", order: 0 },
-      { id: "2", title: "b", status: "active", order: 1 },
-    ],
-    timeline: { startDate: "2026-08-01", endDate: "2026-10-01" },
-    ...over,
-  }) as Project;
-
-describe("ProjectList", () => {
-  it("links each row to the project", () => {
-    render(<ProjectList projects={[project()]} />);
-    expect(screen.getByRole("link", { name: /marketing website/i })).toHaveAttribute(
-      "href",
-      "/projects/p1",
-    );
-  });
-
-  it("marks the progress bar active when the project is awaiting the client", () => {
-    const { container } = render(
-      <ProjectList projects={[project()]} awaitingClient={new Set(["p1"])} />,
-    );
-    expect(container.querySelector("[data-fill]")!.className).toContain("bg-brand-persimmon");
-  });
-
-  it("keeps the bar neutral otherwise", () => {
-    const { container } = render(<ProjectList projects={[project()]} />);
-    expect(container.querySelector("[data-fill]")!.className).toContain("bg-line-strong");
-  });
-});
-```
-
-- [ ] **Step 2: Run it, verify it fails**
-
-Run: `npx vitest run --project unit src/components/portal/project-list.test.tsx`
-Expected: FAIL — module not found.
-
-- [ ] **Step 3: Implement**
+- [ ] **Step 1: Implement**
 
 `src/components/portal/project-list.tsx`:
 
@@ -803,15 +650,15 @@ export function ProjectList({
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [ ] **Step 2: Build**
 
-Run: `npx vitest run --project unit src/components/portal/project-list.test.tsx`
-Expected: PASS (3 tests).
+Run: `npx tsc --noEmit && npm run build`
+Expected: clean.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add src/components/portal/project-list.tsx src/components/portal/project-list.test.tsx
+git add src/components/portal/project-list.tsx
 git commit -m "$(printf 'feat(portal): ProjectList — full-width project rows, replaces the card grid\n\nCo-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>')"
 ```
 
@@ -996,6 +843,19 @@ The dashboard rewrite removes the milestone-stat block and the `ProjectCard` gri
     (await d.isVisible("text=New from Voltair Studio")) ||
       (await d.isVisible("text=Latest delivery")),
   );
+  record(
+    "attention panel renders",
+    (await d.isVisible("text=Needs your attention")),
+  );
+  // one persimmon bar (the project awaiting the client) and at least one neutral bar
+  const fills = await d.$$eval("[data-fill]", (els) =>
+    els.map((e) => getComputedStyle(e).backgroundColor),
+  );
+  const persimmonish = (c) => /rgb\(255,\s*79,\s*0\)/.test(c);
+  record(
+    "exactly one project bar is persimmon (client's turn)",
+    fills.filter(persimmonish).length === 1 && fills.length >= 2,
+  );
 ```
 
 If a check asserted the "Milestones completed across active projects" text, delete that line.
@@ -1108,6 +968,6 @@ git commit -m "$(printf 'chore(portal): remove unused ProjectCard, phase-A regre
 - **Spec §4 (deliverables as sets):** **Phase B — not this plan.** Task 5's `Cover` reads `fileUrl`/`fileType` directly as an interim.
 - **Spec §5 phasing:** this plan is Phase A only. B, C, D get their own plans.
 - **Spec §6 (out of scope):** respected — no rules/model/auth changes; `getClientDeliverables` is read-only.
-- **Spec §7 (testing):** unit tests on the four new/changed components; `phase3-verify` extended (hero check) and kept green; `phase4-verify` run as a guard in Task 10.
+- **Spec §7 (testing):** repo has no component-test stack and none is added (Global Constraints). `milestoneStats` gets a Node-env `*.test.ts`; the new components are verified by `phase3-verify` (extended: hero + attention panel + one-persimmon-bar checks) + `npm run build` + screenshots. `phase4-verify` run as a guard in Task 10.
 - **Type consistency:** `getClientDeliverables → Deliverable[]` consumed by Task 8; `LatestDeliveryHero({pending, lastDecided})` matches Task 8's call; `ProjectList({projects, awaitingClient})` matches Task 8's call; `MilestoneProgress` `tone` added in Task 2 and used in Tasks 3, 7. `relativeTime` and `formatDate` are existing exports of `@/lib/format` (used already in `studio-inbox.tsx` / `project-card.tsx`).
 - **Open risk:** Task 1 Step 1 depends on Fontshare's CDN being scriptable; the zip fallback is documented. If neither works in the execution environment, the user supplies the five `.woff2` files.
