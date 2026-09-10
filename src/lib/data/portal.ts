@@ -53,6 +53,21 @@ export async function getDeliverable(
   return deliverable.clientId === clientId ? deliverable : null;
 }
 
+/**
+ * Every deliverable for the client, newest first. Sorted in memory — a client
+ * has tens of deliverables at most, and this avoids a (clientId, createdAt)
+ * composite index that only the dashboard would use.
+ */
+export async function getClientDeliverables(clientId: string): Promise<Deliverable[]> {
+  const snap = await adminDb
+    .collection(COLLECTIONS.deliverables)
+    .where("clientId", "==", clientId)
+    .get();
+  return snap.docs
+    .map((d) => d.data() as Deliverable)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
 /** SSR seed for the Developer Pulse stream; the client listener takes over on mount. */
 export async function getInitialPulse(
   projectId: string,
