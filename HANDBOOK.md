@@ -235,12 +235,31 @@ apps = deploying to Vercel.** No app-store resubmission for content changes.
 - The `android/` and `ios/` folders are committed. `native/` is just the splash
   shown before the remote loads (and the offline cold-start fallback).
 
-### 4.1 Requirements (macOS for iOS)
+### 4.1 Requirements
 
 | Platform | Needs |
 |---|---|
 | Android | Android Studio, JDK 21, Android SDK. Works on Windows/macOS/Linux. |
-| iOS | macOS + Xcode + CocoaPods (`sudo gem install cocoapods`). |
+| iOS | **macOS** + Xcode + CocoaPods (`sudo gem install cocoapods`). No way around it — Apple requires macOS to build and sign. |
+
+**No Mac?** For iOS you have three options: (a) skip the App Store and let iOS
+users add the installable PWA to their home screen from Safari (full-screen,
+offline, app icon — no store needed); (b) a cloud Mac (MacinCloud ~$1/hr,
+MacStadium); (c) a CI macOS runner (GitHub Actions `macos-latest`, Codemagic,
+Bitrise) building from signing certs stored as secrets. Android + the PWA cover
+most needs on their own.
+
+### 4.0 App icons & splash (done once, or after a brand change)
+
+The Voltair flame is already applied. To regenerate:
+
+```bash
+node scripts/generate-app-assets.mjs        # builds ./assets/ from Brand Assets/VoltairLogo1.png
+npx @capacitor/assets generate \
+  --iconBackgroundColor '#0A0A0A' --iconBackgroundColorDark '#0A0A0A' \
+  --splashBackgroundColor '#0A0A0A' --splashBackgroundColorDark '#0A0A0A'
+npx cap sync
+```
 
 ### 4.2 Build & run
 
@@ -274,14 +293,22 @@ npm run cap:ios                # = cap sync ios && cap open ios
   `android/app/build.gradle` (`versionCode` / `versionName`) before each store
   submission.
 
-### 4.4 App identity
+### 4.4 App identity & store submission
 
 - **Bundle / package id:** `com.voltairstudio.portal` (must match the App Store
   Connect / Play Console listing).
-- **Icons & splash:** replace the placeholders in `ios/App/App/Assets.xcassets`
-  and `android/app/src/main/res/`, or use
-  [`@capacitor/assets`](https://github.com/ionic-team/capacitor-assets) to
-  generate them from one source image.
+- **Privacy policy:** hosted at `/privacy` — **fill in the `[BRACKETED]` values
+  in `src/app/privacy/page.tsx`** (legal entity, address, KVK, contact email,
+  effective date) before submitting. Both stores require the URL.
+- **App Store privacy questionnaire** — declare: Contact Info (name, email),
+  User Content (files, comments), Identifiers (user ID), Diagnostics (crash/perf
+  via hosting logs). Linked to the user, used for App Functionality. No tracking.
+- **Play Data Safety form** — same substance: data collected = personal info +
+  files + app activity; encrypted in transit; user can request deletion.
+- **Accounts:** Apple Developer Program $99/yr · Google Play Console $25 once.
+- **Android signing:** generate a keystore in Android Studio's *Generate Signed
+  Bundle* wizard and **back it up** — losing it means you can never update the
+  app.
 
 ---
 

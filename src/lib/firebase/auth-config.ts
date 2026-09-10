@@ -12,7 +12,7 @@ import { LOGIN_PATH, LOGOUT_PATH, REFRESH_TOKEN_PATH, SESSION_COOKIE_NAME } from
 export { LOGIN_PATH, LOGOUT_PATH, REFRESH_TOKEN_PATH, SESSION_COOKIE_NAME };
 
 /** Paths reachable without a valid session. */
-export const PUBLIC_PATHS = ["/login", LOGIN_PATH, LOGOUT_PATH, REFRESH_TOKEN_PATH];
+export const PUBLIC_PATHS = ["/login", "/privacy", LOGIN_PATH, LOGOUT_PATH, REFRESH_TOKEN_PATH];
 
 function cookieSignatureKeys(): string[] {
   const keys = (process.env.COOKIE_SECRET_KEY ?? "")

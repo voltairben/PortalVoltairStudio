@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
@@ -108,6 +109,11 @@ export function LoginForm({ redirectTo, notice }: { redirectTo: string; notice?:
 
       <p className="mt-8 text-center text-xs leading-5 text-ink-subtle">
         Access is invite-only. Contact Voltair Studio if you need an account.
+      </p>
+      <p className="mt-2 text-center text-xs text-ink-subtle">
+        <Link href="/privacy" className="transition-colors hover:text-brand-persimmon">
+          Privacy Policy
+        </Link>
       </p>
     </div>
   );
