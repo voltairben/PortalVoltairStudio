@@ -3,8 +3,18 @@
 import { addDoc, collection, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { useCallback, useEffect, useState } from "react";
 import { useFirebaseUser } from "@/hooks/use-firebase-user";
+import { postStudioReply } from "@/lib/actions/admin";
 import { db } from "@/lib/firebase/client";
 import { COLLECTIONS, type CommentAttachment, type FeedbackItem } from "@/types";
+
+/**
+ * "client" — the reviewer writes their own comment via the web SDK (offline
+ * queue, optimistic). "studio" — an admin replies through the postStudioReply
+ * server action (Admin SDK, userRole: "admin"); the onSnapshot listener below
+ * brings the reply back. Firestore rules reject an admin creating a comment
+ * with a client identity, so the studio path must go through the action.
+ */
+export type ThreadMode = "client" | "studio";
 
 export interface ThreadComment extends FeedbackItem {
   /** hasPendingWrites — the write is in the local cache but not yet on the server. */
@@ -19,6 +29,7 @@ interface Args {
   clientId: string;
   authorName: string;
   initialComments: FeedbackItem[];
+  mode?: ThreadMode;
 }
 
 export function useFeedbackThread({
@@ -27,6 +38,7 @@ export function useFeedbackThread({
   clientId,
   authorName,
   initialComments,
+  mode = "client",
 }: Args) {
   const { user } = useFirebaseUser();
   const [comments, setComments] = useState<ThreadComment[]>(() =>
@@ -73,6 +85,15 @@ export function useFeedbackThread({
       if (!trimmed || !user) return;
       setPostError(null);
 
+      if (mode === "studio") {
+        // Admin SDK write via the server action; the onSnapshot listener brings
+        // the reply back once it lands. No offline queue — the studio is online.
+        void postStudioReply({ deliverableId, projectId, clientId, text: trimmed }).then((res) => {
+          if (!res.ok) setPostError(res.error ?? "Your reply couldn't be sent. Try again.");
+        });
+        return;
+      }
+
       // The doc lands in the local cache synchronously; the listener above
       // re-fires with pending=true so it renders instantly ("Sending…"), and
       // stays queued if offline. We do NOT await — offline that promise never
@@ -91,7 +112,7 @@ export function useFeedbackThread({
         setPostError("Your comment couldn't be posted. Try again.");
       });
     },
-    [user, deliverableId, projectId, clientId, authorName],
+    [user, deliverableId, projectId, clientId, authorName, mode],
   );
 
   return { comments, status, post, postError, ready: user !== null };

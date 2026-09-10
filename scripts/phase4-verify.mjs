@@ -157,6 +157,19 @@ try {
   await a.waitForSelector(`text=${marker}`, { timeout: 15000 });
   record("client comment appears in the Studio Inbox in real time", true);
   await a.screenshot({ path: `${OUT}/p4-04-inbox.png`, fullPage: true });
+
+  // --- Studio-side deliverable review + reply -----------------------
+  await a.locator('a:has-text("Open review")').first().click();
+  await a.waitForURL("**/admin/projects/**/deliverables/**", { timeout: 10000 });
+  await a.waitForSelector("text=Upload new version");
+  record("Studio Inbox 'Open review' opens the studio review screen (no bounce)", true);
+
+  const studioReply = `studio reply ${stamp}`;
+  await a.waitForSelector("textarea:not([disabled])", { timeout: 10000 });
+  await a.fill("textarea", studioReply);
+  await a.click('button:has-text("Post")');
+  await c.waitForSelector(`text=${studioReply}`, { timeout: 15000 });
+  record("studio reply from the review screen reaches the client thread", true);
   await client2.close();
 } catch (err) {
   record(`admin flow: ${err.message.split("\n")[0]}`, false);

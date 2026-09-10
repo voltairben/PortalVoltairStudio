@@ -3,7 +3,12 @@
 import { CloudOff, Loader2, Paperclip, RadioTower } from "lucide-react";
 import { type Ref, useEffect, useRef } from "react";
 import { CommentComposer, type ComposerHandle } from "@/components/review/comment-composer";
-import { type ThreadComment, type ThreadStatus, useFeedbackThread } from "@/hooks/use-feedback-thread";
+import {
+  type ThreadComment,
+  type ThreadMode,
+  type ThreadStatus,
+  useFeedbackThread,
+} from "@/hooks/use-feedback-thread";
 import { initialsOf, relativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { FeedbackItem } from "@/types";
@@ -15,6 +20,7 @@ export function CommentThread({
   authorName,
   initialComments,
   composerRef,
+  mode = "client",
 }: {
   deliverableId: string;
   projectId: string;
@@ -22,6 +28,7 @@ export function CommentThread({
   authorName: string;
   initialComments: FeedbackItem[];
   composerRef?: Ref<ComposerHandle>;
+  mode?: ThreadMode;
 }) {
   const { comments, status, post, postError, ready } = useFeedbackThread({
     deliverableId,
@@ -29,6 +36,7 @@ export function CommentThread({
     clientId,
     authorName,
     initialComments,
+    mode,
   });
   const scrollRef = useRef<HTMLDivElement>(null);
   const lastPending = comments.at(-1)?.pending ?? false;
@@ -66,7 +74,14 @@ export function CommentThread({
         </p>
       )}
 
-      <CommentComposer clientId={clientId} disabled={!ready} onPost={post} ref={composerRef} />
+      <CommentComposer
+        clientId={clientId}
+        disabled={!ready}
+        onPost={post}
+        ref={composerRef}
+        allowAttachments={mode === "client"}
+        placeholder={mode === "studio" ? "Reply to the client…" : undefined}
+      />
     </div>
   );
 }

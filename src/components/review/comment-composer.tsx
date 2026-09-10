@@ -16,11 +16,15 @@ export function CommentComposer({
   disabled,
   onPost,
   ref,
+  allowAttachments = true,
+  placeholder,
 }: {
   clientId: string;
   disabled?: boolean;
   onPost: (text: string, attachments: CommentAttachment[]) => void;
   ref?: Ref<ComposerHandle>;
+  allowAttachments?: boolean;
+  placeholder?: string;
 }) {
   const [text, setText] = useState("");
   const [attachments, setAttachments] = useState<CommentAttachment[]>([]);
@@ -64,7 +68,9 @@ export function CommentComposer({
         value={text}
         disabled={disabled}
         rows={1}
-        placeholder={disabled ? "Connecting to the feedback thread…" : "Add a comment"}
+        placeholder={
+          disabled ? "Connecting to the feedback thread…" : (placeholder ?? "Add a comment")
+        }
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
           if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -75,14 +81,16 @@ export function CommentComposer({
         className="w-full resize-none rounded-lg border border-zinc-800 bg-brand-obsidian px-3 py-2 text-[13px] text-ink placeholder:text-ink-subtle focus:border-brand-persimmon focus:outline-none focus:ring-2 focus:ring-brand-persimmon/25"
       />
 
-      <div className="mt-2">
-        <AttachmentDropzone
-          clientId={clientId}
-          attachments={attachments}
-          onChange={setAttachments}
-          disabled={disabled}
-        />
-      </div>
+      {allowAttachments && (
+        <div className="mt-2">
+          <AttachmentDropzone
+            clientId={clientId}
+            attachments={attachments}
+            onChange={setAttachments}
+            disabled={disabled}
+          />
+        </div>
+      )}
 
       <div className="mt-2 flex items-center justify-between">
         <span className="tnum text-[11px] text-ink-subtle">⌘↵ to send</span>

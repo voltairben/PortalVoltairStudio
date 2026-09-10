@@ -127,6 +127,37 @@ export async function getAdminProject(projectId: string): Promise<AdminProjectVi
   };
 }
 
+export interface AdminDeliverableView {
+  project: Project;
+  deliverable: Deliverable;
+  comments: FeedbackItem[];
+}
+
+/** The studio-side review view: media + the full feedback thread, no tenant filter. */
+export async function getAdminDeliverableReview(
+  projectId: string,
+  deliverableId: string,
+): Promise<AdminDeliverableView | null> {
+  await requireAdmin();
+  const [projSnap, delSnap] = await Promise.all([
+    adminDb.collection(COLLECTIONS.projects).doc(projectId).get(),
+    adminDb.collection(COLLECTIONS.deliverables).doc(deliverableId).get(),
+  ]);
+  if (!projSnap.exists || !delSnap.exists) return null;
+  const deliverable = delSnap.data() as Deliverable;
+  if (deliverable.projectId !== projectId) return null;
+
+  const commentsSnap = await adminDb
+    .collection(COLLECTIONS.comments)
+    .where("deliverableId", "==", deliverableId)
+    .get();
+  const comments = commentsSnap.docs
+    .map((d) => ({ ...(d.data() as FeedbackItem), commentId: d.id }))
+    .sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+
+  return { project: readProject(projSnap), deliverable, comments };
+}
+
 export interface UploadTarget {
   projectId: string;
   name: string;
