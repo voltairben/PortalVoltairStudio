@@ -29,7 +29,7 @@ healthy, and building the native mobile apps.
    `firestore.indexes.json` change:
    ```bash
    npx firebase login          # once per machine
-   npx firebase deploy --only firestore:rules,storage:rules,firestore:indexes
+   npx firebase deploy --only firestore:rules,firestore:indexes,storage
    ```
    Wait for new composite indexes to finish building (Firestore console →
    Indexes) before the feature that needs them works in production.
@@ -349,7 +349,7 @@ npm run cap:sync            # sync config/plugins into android/ + ios/
 npm run cap:ios             # cap sync ios && cap open ios   (macOS)
 npm run cap:android         # cap sync android && cap open android
 
-npx firebase deploy --only firestore:rules,storage:rules,firestore:indexes
+npx firebase deploy --only firestore:rules,firestore:indexes,storage
 node --env-file=.env.local scripts/set-admin-claim.mjs <email>
 node --env-file=.env.local scripts/delete-client.mjs <clientId | email>
 ```

@@ -58,7 +58,7 @@ separate** and must be done once (and again whenever rules/indexes change):
 
 ```bash
 npx firebase login
-npx firebase deploy --only firestore:rules,storage:rules,firestore:indexes
+npx firebase deploy --only firestore:rules,firestore:indexes,storage
 ```
 
 Without this, the live client portal's real-time reads fail (production Firestore
