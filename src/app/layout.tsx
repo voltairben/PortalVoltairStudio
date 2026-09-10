@@ -1,14 +1,29 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { CapacitorProvider } from "@/components/capacitor-provider";
 import { PwaProvider } from "@/components/pwa-provider";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const sentient = localFont({
+  variable: "--font-sentient",
   display: "swap",
+  src: [
+    { path: "./fonts/Sentient-Medium.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Sentient-Bold.woff2", weight: "700", style: "normal" },
+  ],
 });
+
+const satoshi = localFont({
+  variable: "--font-satoshi",
+  display: "swap",
+  src: [
+    { path: "./fonts/Satoshi-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/Satoshi-Medium.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/Satoshi-Bold.woff2", weight: "700", style: "normal" },
+  ],
+});
+
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -41,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${sentient.variable} ${satoshi.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full bg-brand-obsidian text-ink">
         <CapacitorProvider />
