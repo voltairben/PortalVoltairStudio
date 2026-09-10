@@ -9,35 +9,34 @@ export function milestoneStats(milestones: Milestone[]) {
 }
 
 /**
- * Thin persimmon completion bar. `size="lg"` is the dashboard hero treatment;
- * `size="sm"` sits inside project cards.
+ * Milestone completion bar. Neutral by default; `tone="active"` (persimmon) is
+ * for the one project on a screen that is currently waiting on the client.
  */
 export function MilestoneProgress({
   milestones,
   size = "sm",
+  tone = "neutral",
   className,
 }: {
   milestones: Milestone[];
   size?: "sm" | "lg";
+  tone?: "neutral" | "active";
   className?: string;
 }) {
   const { total, done, pct } = milestoneStats(milestones);
+  const persimmon = tone === "active";
 
   return (
     <div className={className}>
       <div className="flex items-baseline justify-between">
-        <span
-          className={cn(
-            "text-ink-muted",
-            size === "lg" ? "text-sm" : "text-[11px]",
-          )}
-        >
+        <span className={cn("text-ink-muted", size === "lg" ? "text-sm" : "text-2xs")}>
           Milestones
         </span>
         <span
           className={cn(
-            "tnum font-mono text-brand-persimmon",
-            size === "lg" ? "text-sm" : "text-[11px]",
+            "tnum font-mono",
+            persimmon ? "text-brand-persimmon" : "text-ink-subtle",
+            size === "lg" ? "text-sm" : "text-2xs",
           )}
         >
           {done} / {total}
@@ -46,11 +45,15 @@ export function MilestoneProgress({
       <div
         className={cn(
           "mt-2 overflow-hidden rounded-full bg-surface-3",
-          size === "lg" ? "h-2" : "h-1",
+          size === "lg" ? "h-1.5" : "h-1",
         )}
       >
         <div
-          className="h-full rounded-full bg-brand-persimmon transition-[width] duration-500 ease-out"
+          data-fill
+          className={cn(
+            "h-full rounded-full transition-[width] duration-500 ease-out",
+            persimmon ? "bg-brand-persimmon" : "bg-line-strong",
+          )}
           style={{ width: `${pct}%` }}
         />
       </div>
