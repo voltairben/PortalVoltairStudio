@@ -10,6 +10,8 @@ import type { ComponentType } from "react";
 export interface AdminNavItem {
   href: string;
   label: string;
+  /** Shorter label for the mobile bottom bar; falls back to `label`. */
+  short?: string;
   Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
 }
 
@@ -18,7 +20,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/clients", label: "Clients", Icon: Users },
   { href: "/admin/projects", label: "Projects", Icon: FolderKanban },
   { href: "/admin/deliverables", label: "Deliverables", Icon: UploadCloud },
-  { href: "/admin/inbox", label: "Studio Inbox", Icon: Inbox },
+  { href: "/admin/inbox", label: "Studio Inbox", short: "Inbox", Icon: Inbox },
 ];
 
 export function isAdminActive(pathname: string, href: string): boolean {

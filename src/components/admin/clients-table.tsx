@@ -71,6 +71,35 @@ export function ClientsTable({ clients }: { clients: ClientRow[] }) {
     });
   }
 
+  const rowActions = (c: ClientRow) => (
+    <div className="flex shrink-0 items-center gap-1">
+      <button
+        type="button"
+        onClick={() => toggleArchive(c)}
+        disabled={pending}
+        title={c.status === "archived" ? "Restore to active" : "Archive"}
+        aria-label={c.status === "archived" ? "Restore client" : "Archive client"}
+        className="rounded-md p-1.5 text-ink-subtle transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-50"
+      >
+        {c.status === "archived" ? (
+          <ArchiveRestore className="size-4" />
+        ) : (
+          <Archive className="size-4" />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={() => setDeleteTarget(c)}
+        disabled={pending}
+        title="Delete permanently"
+        aria-label="Delete client"
+        className="rounded-md p-1.5 text-ink-subtle transition-colors hover:bg-critical/10 hover:text-critical disabled:opacity-50"
+      >
+        <Trash2 className="size-4" />
+      </button>
+    </div>
+  );
+
   return (
     <>
       <div className="space-y-3">
@@ -90,87 +119,101 @@ export function ClientsTable({ clients }: { clients: ClientRow[] }) {
           </p>
         )}
 
-        <div className="overflow-x-auto rounded-xl border border-zinc-800">
-          <table className="w-full min-w-[780px] text-left text-[13px]">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-surface-1 text-[11px] uppercase tracking-wide text-ink-subtle">
-                <th className="px-4 py-2.5 font-medium">Company</th>
-                <th className="px-4 py-2.5 font-medium">Primary contact</th>
-                <th className="px-4 py-2.5 font-medium">Projects</th>
-                <th className="px-4 py-2.5 font-medium">Status</th>
-                <th className="px-4 py-2.5 font-medium">Onboarded</th>
-                <th className="px-4 py-2.5 text-right font-medium">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800">
-              {rows.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-ink-subtle">
-                    No clients match “{q}”.
-                  </td>
-                </tr>
-              ) : (
-                rows.map((c) => (
-                  <tr
-                    key={c.clientId}
-                    className={cn(
-                      "bg-surface-1/40 hover:bg-surface-1",
-                      c.status === "archived" && "opacity-55",
-                    )}
-                  >
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <span className="grid size-7 shrink-0 place-items-center rounded-full border border-zinc-800 bg-surface-2 text-[10px] font-semibold text-ink-muted">
-                          {initialsOf(c.name)}
-                        </span>
-                        <span className="font-medium text-ink">{c.name}</span>
+        {rows.length === 0 ? (
+          <p className="rounded-xl border border-zinc-800 px-4 py-10 text-center text-[13px] text-ink-subtle">
+            {q.trim() ? `No clients match “${q}”.` : "No clients yet. Onboard your first one to get started."}
+          </p>
+        ) : (
+          <>
+            {/* Narrow screens: one card per client, no horizontal scroll. */}
+            <ul className="space-y-2.5 lg:hidden">
+              {rows.map((c) => (
+                <li
+                  key={c.clientId}
+                  className={cn(
+                    "rounded-xl border border-zinc-800 bg-surface-1/40 p-3.5",
+                    c.status === "archived" && "opacity-55",
+                  )}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-full border border-zinc-800 bg-surface-2 text-[11px] font-semibold text-ink-muted">
+                        {initialsOf(c.name)}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="truncate text-[14px] font-medium text-ink">{c.name}</div>
+                        <div className="text-[11px] text-ink-subtle">
+                          {c.projectCount} project{c.projectCount === 1 ? "" : "s"} ·{" "}
+                          {formatDate(c.createdAt)}
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="text-ink">{c.primaryContactName ?? "—"}</div>
-                      <div className="text-[11px] text-ink-subtle">
+                    </div>
+                    <Badge tone={STATUS_TONE[c.status]}>{c.status}</Badge>
+                  </div>
+                  <div className="mt-3 flex items-end justify-between gap-3 border-t border-zinc-800/70 pt-3">
+                    <div className="min-w-0 text-[12px]">
+                      <div className="truncate text-ink">{c.primaryContactName ?? "—"}</div>
+                      <div className="truncate text-[11px] text-ink-subtle">
                         {c.primaryContactEmail ?? "—"}
                       </div>
-                    </td>
-                    <td className="tnum px-4 py-3 font-mono text-ink-muted">{c.projectCount}</td>
-                    <td className="px-4 py-3">
-                      <Badge tone={STATUS_TONE[c.status]}>{c.status}</Badge>
-                    </td>
-                    <td className="tnum px-4 py-3 text-ink-subtle">{formatDate(c.createdAt)}</td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => toggleArchive(c)}
-                          disabled={pending}
-                          title={c.status === "archived" ? "Restore to active" : "Archive"}
-                          aria-label={c.status === "archived" ? "Restore client" : "Archive client"}
-                          className="rounded-md p-1.5 text-ink-subtle transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-50"
-                        >
-                          {c.status === "archived" ? (
-                            <ArchiveRestore className="size-4" />
-                          ) : (
-                            <Archive className="size-4" />
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteTarget(c)}
-                          disabled={pending}
-                          title="Delete permanently"
-                          aria-label="Delete client"
-                          className="rounded-md p-1.5 text-ink-subtle transition-colors hover:bg-critical/10 hover:text-critical disabled:opacity-50"
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
-                      </div>
-                    </td>
+                    </div>
+                    {rowActions(c)}
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {/* Desktop: the full table. */}
+            <div className="hidden overflow-x-auto rounded-xl border border-zinc-800 lg:block">
+              <table className="w-full min-w-[780px] text-left text-[13px]">
+                <thead>
+                  <tr className="border-b border-zinc-800 bg-surface-1 text-[11px] uppercase tracking-wide text-ink-subtle">
+                    <th className="px-4 py-2.5 font-medium">Company</th>
+                    <th className="px-4 py-2.5 font-medium">Primary contact</th>
+                    <th className="px-4 py-2.5 font-medium">Projects</th>
+                    <th className="px-4 py-2.5 font-medium">Status</th>
+                    <th className="px-4 py-2.5 font-medium">Onboarded</th>
+                    <th className="px-4 py-2.5 text-right font-medium">Actions</th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {rows.map((c) => (
+                    <tr
+                      key={c.clientId}
+                      className={cn(
+                        "bg-surface-1/40 hover:bg-surface-1",
+                        c.status === "archived" && "opacity-55",
+                      )}
+                    >
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="grid size-7 shrink-0 place-items-center rounded-full border border-zinc-800 bg-surface-2 text-[10px] font-semibold text-ink-muted">
+                            {initialsOf(c.name)}
+                          </span>
+                          <span className="font-medium text-ink">{c.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="text-ink">{c.primaryContactName ?? "—"}</div>
+                        <div className="text-[11px] text-ink-subtle">
+                          {c.primaryContactEmail ?? "—"}
+                        </div>
+                      </td>
+                      <td className="tnum px-4 py-3 font-mono text-ink-muted">{c.projectCount}</td>
+                      <td className="px-4 py-3">
+                        <Badge tone={STATUS_TONE[c.status]}>{c.status}</Badge>
+                      </td>
+                      <td className="tnum px-4 py-3 text-ink-subtle">{formatDate(c.createdAt)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end">{rowActions(c)}</div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
 
       <Modal open={deleteTarget !== null} onClose={closeDelete} title="Delete client">
