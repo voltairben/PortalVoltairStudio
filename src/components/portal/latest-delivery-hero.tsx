@@ -4,21 +4,20 @@ import { formatDate } from "@/lib/format";
 import type { Deliverable } from "@/types";
 
 function Cover({ d }: { d: Deliverable }) {
-  if (d.fileType === "image") {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        src={d.fileUrl}
-        alt=""
-        className="aspect-[20/9] w-full object-cover"
-        loading="eager"
-        decoding="async"
-      />
-    );
-  }
   return (
-    <div className="brand-glow flex aspect-[20/9] w-full items-center justify-center bg-surface-2">
+    <div className="brand-glow relative flex aspect-[20/9] w-full items-center justify-center bg-surface-2">
+      {/* Flame sits behind — visible for non-image kinds and if the image fails. */}
       <Flame className="size-8 text-brand-persimmon/70" />
+      {d.fileType === "image" && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={d.fileUrl}
+          alt=""
+          className="absolute inset-0 size-full object-cover"
+          loading="eager"
+          decoding="async"
+        />
+      )}
     </div>
   );
 }
