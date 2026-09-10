@@ -5,9 +5,8 @@
  * server (proxy + Server Components) sees the same session.
  */
 import {
-  GoogleAuthProvider,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
-  signInWithPopup,
   signOut,
 } from "firebase/auth";
 import { auth } from "./client";
@@ -28,11 +27,24 @@ export async function signInWithPassword(email: string, password: string): Promi
   await exchangeIdTokenForSession(await cred.user.getIdToken());
 }
 
-export async function signInWithGoogle(): Promise<void> {
-  const provider = new GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: "select_account" });
-  const cred = await signInWithPopup(auth, provider);
-  await exchangeIdTokenForSession(await cred.user.getIdToken());
+/**
+ * Send a Firebase password-reset email. Firebase's own mail service delivers it
+ * (not Resend), so it works for any address today. `auth/user-not-found` is
+ * swallowed — the caller shows the same "if an account exists…" message either
+ * way so the form never reveals whether an email is registered.
+ */
+export async function sendResetEmail(email: string): Promise<boolean> {
+  try {
+    await sendPasswordResetEmail(auth, email.trim());
+    return true;
+  } catch (error) {
+    const code =
+      typeof error === "object" && error && "code" in error
+        ? String((error as { code: unknown }).code)
+        : "";
+    if (code === "auth/user-not-found") return true;
+    return false;
+  }
 }
 
 /**
@@ -72,9 +84,6 @@ export function authErrorMessage(error: unknown): string {
       return "Incorrect email or password.";
     case "auth/too-many-requests":
       return "Too many attempts. Try again in a few minutes.";
-    case "auth/popup-closed-by-user":
-    case "auth/cancelled-popup-request":
-      return "Sign-in was cancelled.";
     case "auth/network-request-failed":
       return "Network error. Check your connection and try again.";
     default:
