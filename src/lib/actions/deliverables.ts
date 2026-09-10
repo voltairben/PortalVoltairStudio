@@ -65,7 +65,10 @@ async function decide(input: unknown, status: Decision): Promise<DecisionResult>
     .get();
   const projectName = (projectSnap.data() as Project | undefined)?.name ?? "Project";
   const clientName = user.name ?? user.email ?? "A client";
-  const reviewUrl = `${appUrl()}/projects/${parsed.data.projectId}/deliverables/${parsed.data.deliverableId}`;
+  const clientReviewPath = `/projects/${parsed.data.projectId}/deliverables/${parsed.data.deliverableId}`;
+  // Studio email links to the admin project page — the client review route
+  // redirects admins to /admin (requireClient).
+  const reviewUrl = `${appUrl()}/admin/projects/${parsed.data.projectId}`;
 
   await writeActivity(adminDb, {
     type: status === "approved" ? "deliverable-approved" : "deliverable-changes-requested",
@@ -95,11 +98,12 @@ async function decide(input: unknown, status: Decision): Promise<DecisionResult>
     console.error("[deliverable decision] studio email failed", error);
   }
 
-  revalidatePath(reviewUrl.replace(appUrl(), ""));
+  revalidatePath(clientReviewPath);
   revalidatePath(`/projects/${parsed.data.projectId}`);
   revalidatePath("/dashboard");
   revalidatePath("/admin");
   revalidatePath("/admin/inbox");
+  revalidatePath(`/admin/projects/${parsed.data.projectId}`);
   return { ok: true, status };
 }
 

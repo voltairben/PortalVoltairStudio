@@ -23,7 +23,7 @@ export function renderDecisionEmail(args: DecisionEmailArgs): {
   const text = [
     `${args.clientName} ${verb} "${args.deliverableName}" (${args.projectName}).`,
     ``,
-    `Review it: ${args.reviewUrl}`,
+    `Open the project: ${args.reviewUrl}`,
     ``,
     `— Voltair Studio Portal`,
   ].join("\n");
@@ -48,7 +48,7 @@ export function renderDecisionEmail(args: DecisionEmailArgs): {
       <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:22px;">
         <tr><td style="border-radius:9px;background:#FF4F00;">
           <a href="${escapeAttr(args.reviewUrl)}" style="display:inline-block;padding:11px 22px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;font-size:13px;font-weight:600;color:#0A0A0A;text-decoration:none;">
-            Open the review
+            Open the project
           </a>
         </td></tr>
       </table>

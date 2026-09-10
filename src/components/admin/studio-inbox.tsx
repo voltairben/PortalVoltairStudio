@@ -128,7 +128,9 @@ function InboxRow({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const isStudio = comment.userRole === "admin";
-  const reviewHref = `/projects/${comment.projectId}/deliverables/${comment.deliverableId}`;
+  // The client review page is client-only (requireClient bounces admins to /admin).
+  // Send the studio to the project instead — the reply happens inline here.
+  const projectHref = `/admin/projects/${comment.projectId}`;
 
   function submit() {
     const trimmed = text.trim();
@@ -215,11 +217,11 @@ function InboxRow({
 
       <div className="mt-3 flex items-center gap-3 border-t border-zinc-800 pt-3">
         <Link
-          href={reviewHref}
+          href={projectHref}
           className="inline-flex items-center gap-1 text-[12px] text-ink-subtle transition-colors hover:text-brand-persimmon"
         >
           <ExternalLink className="size-3.5" />
-          Open review
+          Open project
         </Link>
         {!replying && (
           <button

@@ -94,22 +94,26 @@ export default async function AdminProjectPage({ params }: { params: Params }) {
         ) : (
           <ul className="divide-y divide-zinc-800 overflow-hidden rounded-xl border border-zinc-800 bg-surface-1">
             {deliverables.map((d) => (
-              <li key={d.deliverableId}>
-                <Link
-                  href={`/projects/${project.projectId}/deliverables/${d.deliverableId}`}
-                  className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2/50"
+              <li key={d.deliverableId} className="flex items-center gap-3 px-4 py-3">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted">
+                  <FileTypeIcon type={d.fileType} className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[13px] font-medium text-ink">{d.name}</p>
+                  <p className="tnum text-[11px] text-ink-subtle">
+                    v{d.version} · {formatDate(d.createdAt)}
+                    {d.feedbackCount > 0 && ` · ${d.feedbackCount} comment${d.feedbackCount === 1 ? "" : "s"}`}
+                  </p>
+                </div>
+                <a
+                  href={d.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-ink-subtle transition-colors hover:text-brand-persimmon"
                 >
-                  <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted">
-                    <FileTypeIcon type={d.fileType} className="size-4" />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium text-ink">{d.name}</p>
-                    <p className="tnum text-[11px] text-ink-subtle">
-                      v{d.version} · {formatDate(d.createdAt)}
-                    </p>
-                  </div>
-                  <DeliverableStatusBadge status={d.status} />
-                </Link>
+                  View file
+                </a>
+                <DeliverableStatusBadge status={d.status} />
               </li>
             ))}
           </ul>
