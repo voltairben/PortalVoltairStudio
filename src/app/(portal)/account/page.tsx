@@ -11,17 +11,17 @@ export default async function AccountPage() {
   const company = user.clientId ? await getClientCompany(user.clientId) : null;
 
   return (
-    <div className="max-w-lg space-y-8">
+    <div className="max-w-2xl space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-ink">Account</h1>
+        <h1 className="text-2xl text-ink">Account</h1>
         <p className="mt-1 text-sm text-ink-muted">Your portal profile and workspace.</p>
       </header>
 
-      <div className="rounded-xl border border-zinc-800 bg-surface-1 p-5">
+      <div className="rounded-xl border border-line-strong bg-surface-1 p-6">
         <div className="flex items-center gap-4">
           <span
             aria-hidden
-            className="grid size-12 shrink-0 place-items-center rounded-full border border-zinc-800 bg-surface-2 text-sm font-semibold text-ink"
+            className="grid size-12 shrink-0 place-items-center rounded-full border border-line-strong bg-surface-2 text-sm font-semibold text-ink"
           >
             {initialsOf(user.name ?? user.email)}
           </span>
@@ -31,7 +31,7 @@ export default async function AccountPage() {
           </div>
         </div>
 
-        <dl className="mt-5 space-y-3 border-t border-zinc-800 pt-4 text-[13px]">
+        <dl className="mt-6 space-y-3 border-t border-line pt-4 text-[13px]">
           <div className="flex justify-between gap-4">
             <dt className="text-ink-subtle">Company</dt>
             <dd className="text-ink">{company?.name ?? "—"}</dd>
@@ -43,7 +43,7 @@ export default async function AccountPage() {
         </dl>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-surface-1 px-5 py-4">
+      <div className="flex items-center justify-between rounded-xl border border-line-strong bg-surface-1 px-6 py-4">
         <div>
           <p className="text-[13px] font-medium text-ink">Sign out</p>
           <p className="text-[12px] text-ink-subtle">End your session on this device.</p>

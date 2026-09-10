@@ -41,7 +41,9 @@ export function DeveloperPulse({ projectId, clientId, initialEvents, initialDepl
   return (
     <section className="space-y-4">
       <div className="flex items-center gap-2">
-        <h2 className="text-sm font-semibold text-ink">Developer Pulse</h2>
+        <h2 className="text-2xs font-semibold uppercase tracking-[0.15em] text-ink-subtle">
+          Developer Pulse
+        </h2>
         <span
           className={cn(
             "size-1.5 rounded-full",
