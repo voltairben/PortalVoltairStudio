@@ -8,6 +8,7 @@ import { DELIVERABLE_STATUS_META } from "@/components/portal/deliverable-status"
 import type { ComposerHandle } from "@/components/review/comment-composer";
 import { CommentThread } from "@/components/review/comment-thread";
 import { DecisionPanel } from "@/components/review/decision-panel";
+import { WebsitePreview } from "@/components/review/website-preview";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Deliverable, DeliverableStatus, FeedbackItem } from "@/types";
@@ -108,7 +109,13 @@ export function DeliverableReview({
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="min-w-0">
-        {deliverable.kind === "designs" && deliverable.assets.length > 1 ? (
+        {deliverable.kind === "website" ? (
+          <WebsitePreview
+            coverUrl={deliverable.coverUrl}
+            siteUrl={deliverable.siteUrl ?? null}
+            name={deliverable.name}
+          />
+        ) : deliverable.kind === "designs" && deliverable.assets.length > 1 ? (
           <GalleryViewer assets={deliverable.assets} name={deliverable.name} />
         ) : deliverable.assets[0]?.type === "video" ? (
           <VideoPlayer src={deliverable.assets[0].url} />
