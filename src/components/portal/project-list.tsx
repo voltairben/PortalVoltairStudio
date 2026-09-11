@@ -18,7 +18,7 @@ export function ProjectList({
           <li key={p.projectId}>
             <Link
               href={`/projects/${p.projectId}`}
-              className="grid grid-cols-[1fr_auto] items-start gap-x-4 gap-y-3 py-4 transition-colors hover:bg-surface-1/50 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1.6fr)_auto] sm:items-center sm:gap-x-6"
+              className="grid grid-cols-[1fr_auto] items-start gap-x-4 gap-y-3 py-4 transition-colors hover:bg-surface-1/50 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1.6fr)_7rem] sm:items-center sm:gap-x-6"
             >
               <div className="min-w-0 sm:col-start-1 sm:row-start-1">
                 <h3 className="truncate text-[15px] text-ink">{p.name}</h3>
