@@ -8,6 +8,7 @@ export interface DecisionEmailArgs {
   reviewUrl: string;
 }
 
+/** Render the studio notification sent after a client records a review decision. */
 export function renderDecisionEmail(args: DecisionEmailArgs): {
   subject: string;
   html: string;

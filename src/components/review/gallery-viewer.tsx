@@ -5,6 +5,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { DeliverableAsset } from "@/types";
 
+/** Present a keyboard-accessible gallery for the assets in a designs deliverable. */
 export function GalleryViewer({ assets, name }: { assets: DeliverableAsset[]; name: string }) {
   const [index, setIndex] = useState(0);
   const current = assets[index];

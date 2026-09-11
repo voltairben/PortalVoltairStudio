@@ -11,7 +11,9 @@ export function captureVideoFrame(file: File): Promise<Blob | null> {
     const url = URL.createObjectURL(file);
     video.src = url;
 
+    /** Release the temporary object URL after video processing completes. */
     const cleanup = () => URL.revokeObjectURL(url);
+    /** Resolve without a cover when the browser cannot decode or capture the video. */
     const fail = () => {
       cleanup();
       resolve(null);

@@ -4,6 +4,7 @@ import { FileTypeIcon } from "@/components/portal/file-type-icon";
 import { formatDate } from "@/lib/format";
 import type { Deliverable } from "@/types";
 
+/** Render project deliverables as cover-aware review cards. */
 export function DeliverableGrid({
   projectId,
   deliverables,

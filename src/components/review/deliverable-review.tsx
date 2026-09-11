@@ -89,6 +89,7 @@ function StudioStatusCard({
   );
 }
 
+/** Select the appropriate asset viewer and render the deliverable review workspace. */
 export function DeliverableReview({
   deliverable,
   projectId,

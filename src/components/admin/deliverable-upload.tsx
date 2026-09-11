@@ -28,6 +28,7 @@ function fileTypeOf(mime: string): DeliverableFileType {
   return "other";
 }
 
+/** Return a user-facing validation error for an unsupported upload, if any. */
 function validateOne(f: File): string | null {
   if (f.size > MAX_BYTES) return "Files must be 500 MB or smaller.";
   if (fileTypeOf(f.type) === "other") return "Upload a video, image, or PDF.";
@@ -49,6 +50,7 @@ function fmtEta(seconds: number): string {
 
 type Phase = "idle" | "uploading" | "paused" | "finalizing" | "done" | "error";
 
+/** Manage single-file and multi-image deliverable uploads from selection through publishing. */
 export function DeliverableUpload({
   targets,
   preselectedProjectId,
@@ -91,6 +93,7 @@ export function DeliverableUpload({
     hasSelection &&
     phase === "idle";
 
+  /** Validate a file selection and route it to the single-file or image-set flow. */
   function pickFiles(fileList: FileList | null) {
     setFileError(null);
     const picked = Array.from(fileList ?? []);
@@ -123,6 +126,7 @@ export function DeliverableUpload({
     if (!title.trim()) setTitle("Design set");
   }
 
+  /** Start the upload flow that matches the current file selection. */
   function start() {
     if (!canStart || !target) return;
     if (imageSet.length > 0) {
@@ -132,6 +136,7 @@ export function DeliverableUpload({
     }
   }
 
+  /** Upload one file, optionally capture its video cover, and publish the deliverable. */
   function startSingleFile(f: File) {
     if (!target) return;
     setError(null);
@@ -211,6 +216,7 @@ export function DeliverableUpload({
     );
   }
 
+  /** Upload the selected image set and publish it as one designs deliverable. */
   async function startMultiImage() {
     if (!target) return;
     setError(null);
@@ -256,6 +262,7 @@ export function DeliverableUpload({
     }
   }
 
+  /** Clear upload progress and restore the form to its initial state. */
   function reset() {
     taskRef.current = null;
     setFile(null);

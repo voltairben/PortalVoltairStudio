@@ -8,6 +8,7 @@ export interface DeliverableReadyEmailArgs {
   reviewUrl: string;
 }
 
+/** Render the client notification for a newly published deliverable. */
 export function renderDeliverableReadyEmail(args: DeliverableReadyEmailArgs): {
   subject: string;
   html: string;

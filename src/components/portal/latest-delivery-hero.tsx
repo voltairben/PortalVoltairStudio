@@ -4,6 +4,7 @@ import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Deliverable } from "@/types";
 
+/** Render a deliverable cover image or its file-type fallback. */
 function Cover({ d, pending }: { d: Deliverable; pending: boolean }) {
   return (
     <div
@@ -30,6 +31,7 @@ function Cover({ d, pending }: { d: Deliverable; pending: boolean }) {
   );
 }
 
+/** Highlight the client's newest deliverable and its review action. */
 export function LatestDeliveryHero({
   pending,
   lastDecided,

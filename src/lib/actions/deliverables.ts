@@ -120,6 +120,7 @@ export interface CreateDeliverableResult {
   error?: string;
 }
 
+/** Validate and persist a newly uploaded deliverable, then notify the client. */
 export async function createDeliverable(input: unknown): Promise<CreateDeliverableResult> {
   const actor = await getCurrentUser();
   if (actor?.role !== "admin") return { ok: false, error: "Not authorized." };

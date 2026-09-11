@@ -44,6 +44,7 @@ export async function getProject(projectId: string, clientId: string): Promise<P
   return project.clientId === clientId ? project : null;
 }
 
+/** Load the deliverables for one client project. */
 export async function getDeliverables(
   projectId: string,
   clientId: string,
@@ -57,6 +58,7 @@ export async function getDeliverables(
   return snap.docs.map((d) => normalizeDeliverable(d.data() as Deliverable));
 }
 
+/** Load a deliverable only when it belongs to the requested client. */
 export async function getDeliverable(
   deliverableId: string,
   clientId: string,

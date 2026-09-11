@@ -3,6 +3,7 @@
 import { CloudOff } from "lucide-react";
 import { useOnline } from "@/hooks/use-online";
 
+/** Display a persistent notice while the browser is offline. */
 export function ConnectionBanner() {
   const online = useOnline();
   if (online) return null;

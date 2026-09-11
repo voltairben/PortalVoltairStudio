@@ -8,6 +8,7 @@ import { relativeTime } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
+/** Render the signed-in client's dashboard summary and latest work. */
 export default async function DashboardPage() {
   const user = await requireClient();
   const clientId = user.clientId ?? "";

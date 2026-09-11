@@ -1,3 +1,4 @@
+/** Summarize client actions that are currently waiting for attention. */
 export function AttentionPanel({
   pendingCount,
   recent,

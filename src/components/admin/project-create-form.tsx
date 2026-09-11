@@ -11,6 +11,7 @@ import { STAGE_LABELS } from "@/types";
 const STAGES = Object.entries(STAGE_LABELS) as [keyof typeof STAGE_LABELS, string][];
 const STATUSES = ["active", "paused", "completed"] as const;
 
+/** Render and submit the admin form for creating a client project. */
 export function ProjectCreateForm({
   clients,
   openOnLoad = false,

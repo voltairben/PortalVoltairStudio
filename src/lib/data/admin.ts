@@ -36,6 +36,7 @@ export interface StudioMetrics {
   approvedDeliverables: number;
 }
 
+/** Load aggregate client, project, deliverable, and review counts for the studio dashboard. */
 export async function getStudioMetrics(): Promise<StudioMetrics> {
   await requireAdmin();
   const [clients, projects, deliverables] = await Promise.all([
@@ -112,6 +113,7 @@ export interface AdminProjectView {
   deliverables: Deliverable[];
 }
 
+/** Load one project and its related client and deliverables for the admin view. */
 export async function getAdminProject(projectId: string): Promise<AdminProjectView | null> {
   await requireAdmin();
   const snap = await adminDb.collection(COLLECTIONS.projects).doc(projectId).get();
@@ -190,6 +192,7 @@ export async function getUploadTargets(): Promise<UploadTarget[]> {
 
 export type DeliverableRow = Deliverable & { projectName: string; clientName: string };
 
+/** Load all deliverables with the client and project labels needed by admin tables. */
 export async function getAllDeliverables(): Promise<DeliverableRow[]> {
   await requireAdmin();
   const [deliverables, projects, clients] = await Promise.all([
@@ -216,6 +219,7 @@ export interface InboxData {
   clients: { clientId: string; name: string }[];
 }
 
+/** Load feedback, deliverables, and project labels for the studio inbox. */
 export async function getInboxData(): Promise<InboxData> {
   await requireAdmin();
   const [comments, deliverables, projects, clients] = await Promise.all([

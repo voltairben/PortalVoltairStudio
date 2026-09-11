@@ -20,6 +20,7 @@ const FILE_TYPE_TO_ASSET_TYPE: Record<DeliverableFileType, DeliverableAssetType>
   other: "pdf",
 };
 
+/** Map a legacy deliverable file type to the normalized kind and asset type. */
 export function mapLegacyFileType(fileType: DeliverableFileType): {
   kind: DeliverableKind;
   assetType: DeliverableAssetType;

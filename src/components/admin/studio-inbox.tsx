@@ -23,6 +23,7 @@ const TABS: { key: "all" | DeliverableStatus; label: string }[] = [
   { key: "approved", label: "Approved" },
 ];
 
+/** Render the studio feedback inbox and keep its deliverables synchronized in real time. */
 export function StudioInbox({ data }: { data: InboxData }) {
   const { user } = useFirebaseUser();
   const [comments, setComments] = useState<FeedbackItem[]>(data.comments);

@@ -3,6 +3,7 @@ import { MilestoneProgress } from "@/components/portal/milestone-progress";
 import { Badge } from "@/components/ui/badge";
 import { STAGE_LABELS, type Project } from "@/types";
 
+/** Render projects with progress and client-attention status. */
 export function ProjectList({
   projects,
   awaitingClient,
