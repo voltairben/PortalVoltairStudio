@@ -8,16 +8,17 @@ import type { Deliverable } from "@/types";
 export function DeliverableGrid({
   projectId,
   deliverables,
+  basePath = "/projects",
+  emptyMessage = "No deliverables yet — Voltair Studio will publish work here for your review.",
 }: {
   projectId: string;
   deliverables: Deliverable[];
+  /** Admin reuses this same grid — set to "/admin/projects" so the cards link into the studio review screen instead of the client one. */
+  basePath?: string;
+  emptyMessage?: string;
 }) {
   if (deliverables.length === 0) {
-    return (
-      <p className="text-[13px] text-ink-subtle">
-        No deliverables yet — Voltair Studio will publish work here for your review.
-      </p>
-    );
+    return <p className="text-[13px] text-ink-subtle">{emptyMessage}</p>;
   }
 
   return (
@@ -25,7 +26,7 @@ export function DeliverableGrid({
       {deliverables.map((d) => (
         <Link
           key={d.deliverableId}
-          href={`/projects/${projectId}/deliverables/${d.deliverableId}`}
+          href={`${basePath}/${projectId}/deliverables/${d.deliverableId}`}
           className="group flex flex-col rounded-xl border border-zinc-800 bg-surface-1 p-4 transition-[border-color,box-shadow] duration-200 hover:glow-persimmon"
         >
           {d.coverUrl && (

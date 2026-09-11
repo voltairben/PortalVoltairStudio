@@ -6,11 +6,9 @@ import { MilestoneEditor } from "@/components/admin/milestone-editor";
 import { PageHeader } from "@/components/admin/page-header";
 import { ProjectEditForm } from "@/components/admin/project-edit-form";
 import { ReconcileDeploymentButton } from "@/components/admin/reconcile-deployment-button";
-import { DeliverableStatusBadge } from "@/components/portal/deliverable-status";
-import { FileTypeIcon } from "@/components/portal/file-type-icon";
+import { DeliverableGrid } from "@/components/portal/deliverable-grid";
 import { getAdminProject } from "@/lib/data/admin";
 import { requireAdmin } from "@/lib/firebase/session";
-import { formatDate } from "@/lib/format";
 
 type Params = Promise<{ projectId: string }>;
 
@@ -104,40 +102,12 @@ export default async function AdminProjectPage({ params }: { params: Params }) {
             {deliverables.length}
           </span>
         </h2>
-        {deliverables.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-zinc-800 bg-surface-1/50 px-4 py-8 text-center text-[13px] text-ink-subtle">
-            Nothing published yet.
-          </p>
-        ) : (
-          <ul className="divide-y divide-zinc-800 overflow-hidden rounded-xl border border-zinc-800 bg-surface-1">
-            {deliverables.map((d) => (
-              <li key={d.deliverableId}>
-                <Link
-                  href={`/admin/projects/${project.projectId}/deliverables/${d.deliverableId}`}
-                  className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2/50"
-                >
-                  <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted">
-                    {d.coverUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={d.coverUrl} alt="" className="size-full object-cover" />
-                    ) : (
-                      <FileTypeIcon type={d.fileType} kind={d.kind} className="size-4" />
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[13px] font-medium text-ink">{d.name}</p>
-                    <p className="tnum text-[11px] text-ink-subtle">
-                      v{d.version} · {formatDate(d.createdAt)}
-                      {d.feedbackCount > 0 &&
-                        ` · ${d.feedbackCount} comment${d.feedbackCount === 1 ? "" : "s"}`}
-                    </p>
-                  </div>
-                  <DeliverableStatusBadge status={d.status} />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
+        <DeliverableGrid
+          projectId={project.projectId}
+          deliverables={deliverables}
+          basePath="/admin/projects"
+          emptyMessage="Nothing published yet."
+        />
       </section>
     </div>
   );

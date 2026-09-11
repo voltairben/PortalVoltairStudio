@@ -2,9 +2,10 @@ import { CircleCheck, Clock3, FolderKanban, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ActivityStream } from "@/components/admin/activity-stream";
+import { AdminLatestDeliveryHero } from "@/components/admin/admin-latest-delivery-hero";
 import { MetricCard } from "@/components/admin/metric-card";
 import { PageHeader } from "@/components/admin/page-header";
-import { getRecentActivity, getStudioMetrics } from "@/lib/data/admin";
+import { getAllDeliverables, getRecentActivity, getStudioMetrics } from "@/lib/data/admin";
 import { requireAdmin } from "@/lib/firebase/session";
 
 export const metadata: Metadata = { title: "Studio Overview" };
@@ -17,12 +18,19 @@ const QUICK_ACTIONS = [
 
 export default async function AdminOverviewPage() {
   const user = await requireAdmin();
-  const [metrics, activity] = await Promise.all([getStudioMetrics(), getRecentActivity(20)]);
+  const [metrics, activity, deliverables] = await Promise.all([
+    getStudioMetrics(),
+    getRecentActivity(20),
+    getAllDeliverables(),
+  ]);
   const firstName = user.name?.split(" ")[0] ?? "there";
+  const latest = deliverables[0] ?? null;
 
   return (
     <div className="space-y-9">
       <PageHeader title={`Good to see you, ${firstName}`} subtitle="Studio operations at a glance." />
+
+      {latest && <AdminLatestDeliveryHero d={latest} />}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Active clients" value={metrics.activeClients} Icon={Users} />
