@@ -36,7 +36,7 @@ export function DeliverableGrid({
           )}
           <div className="flex items-center justify-between">
             <span className="grid size-9 place-items-center rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted transition-colors group-hover:text-brand-persimmon">
-              <FileTypeIcon type={d.fileType} className="size-4" />
+              <FileTypeIcon type={d.fileType} kind={d.kind} className="size-4" />
             </span>
             <span className="tnum font-mono text-[11px] text-ink-subtle">
               {d.versionLabel ?? `v${d.version}`}

@@ -55,7 +55,7 @@ export default async function AdminDeliverablesPage() {
                       className="flex items-center gap-2.5"
                     >
                       <span className="grid size-7 shrink-0 place-items-center rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted">
-                        <FileTypeIcon type={d.fileType} className="size-3.5" />
+                        <FileTypeIcon type={d.fileType} kind={d.kind} className="size-3.5" />
                       </span>
                       <span className="font-medium text-ink hover:text-brand-persimmon">{d.name}</span>
                       <span className="tnum font-mono text-[11px] text-ink-subtle">

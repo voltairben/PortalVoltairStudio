@@ -100,7 +100,7 @@ export default async function AdminProjectPage({ params }: { params: Params }) {
                   className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2/50"
                 >
                   <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted">
-                    <FileTypeIcon type={d.fileType} className="size-4" />
+                    <FileTypeIcon type={d.fileType} kind={d.kind} className="size-4" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-medium text-ink">{d.name}</p>
