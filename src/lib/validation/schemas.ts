@@ -81,6 +81,16 @@ export const projectSchema = z.object({
   createdAt: isoDateTime,
 });
 
+export const deliverableAssetTypeSchema = z.enum(["image", "video", "pdf"]);
+export const deliverableKindSchema = z.enum(["designs", "website", "video", "document"]);
+
+export const deliverableAssetSchema = z.object({
+  storagePath: z.string().min(1),
+  url: z.string().url(),
+  type: deliverableAssetTypeSchema,
+  label: z.string().min(1).nullable().optional(),
+});
+
 export const deliverableSchema = z.object({
   deliverableId: z.string().min(1),
   projectId: z.string().min(1),
@@ -187,9 +197,9 @@ export const createDeliverableInputSchema = z.object({
   projectId: z.string().min(1),
   clientId: z.string().min(1),
   name: z.string().trim().min(1).max(200),
-  fileUrl: z.string().url(),
-  storagePath: z.string().min(1),
-  fileType: z.enum(["video", "image", "document", "other"]),
+  kind: deliverableKindSchema,
+  assets: z.array(deliverableAssetSchema).min(1).max(20),
+  coverUrl: z.string().url().nullable(),
   version: z.number().int().positive().max(999),
   versionLabel: z.string().trim().min(1).max(20),
   milestoneId: z.string().min(1).nullable().optional(),
