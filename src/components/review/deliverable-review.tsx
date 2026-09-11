@@ -11,7 +11,7 @@ import { DecisionPanel } from "@/components/review/decision-panel";
 import { WebsitePreview } from "@/components/review/website-preview";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { Deliverable, DeliverableStatus, FeedbackItem } from "@/types";
+import type { Deliverable, DeliverableKind, DeliverableStatus, FeedbackItem } from "@/types";
 
 // The three review tools are code-split: a given deliverable renders exactly one,
 // so the other two never reach the browser. A fixed-height skeleton holds the
@@ -56,10 +56,12 @@ function StudioStatusCard({
   status,
   decidedAt,
   projectId,
+  kind,
 }: {
   status: DeliverableStatus;
   decidedAt: string | null;
   projectId: string;
+  kind: DeliverableKind;
 }) {
   const meta = DELIVERABLE_STATUS_META[status];
   return (
@@ -80,7 +82,11 @@ function StudioStatusCard({
       </div>
       <p className="mt-3 text-[13px] leading-6 text-ink-muted">{STUDIO_STATUS_NOTE[status]}</p>
       <Link
-        href={`/admin/deliverables/upload?project=${projectId}`}
+        href={
+          kind === "website"
+            ? `/admin/deliverables/deliver-build?project=${projectId}`
+            : `/admin/deliverables/upload?project=${projectId}`
+        }
         className="mt-4 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-surface-2 text-[13px] font-medium text-ink transition-colors hover:border-brand-persimmon hover:text-brand-persimmon"
       >
         <UploadCloud className="size-4" />
@@ -142,6 +148,7 @@ export function DeliverableReview({
             status={deliverable.status}
             decidedAt={deliverable.decidedAt}
             projectId={projectId}
+            kind={deliverable.kind}
           />
         ) : (
           <DecisionPanel

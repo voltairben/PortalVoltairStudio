@@ -22,7 +22,10 @@ function validateScreenshot(f: File): string | null {
 function validateSiteUrl(v: string): string | null {
   if (!v.trim()) return "Enter the live site URL.";
   try {
-    new URL(v.trim());
+    const parsed = new URL(v.trim());
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "Enter a full http(s) URL.";
+    }
     return null;
   } catch {
     return "Enter a full URL, including https://.";
