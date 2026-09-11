@@ -3,6 +3,7 @@ import {
   Inbox,
   LayoutDashboard,
   UploadCloud,
+  UserRound,
   Users,
 } from "lucide-react";
 import type { ComponentType } from "react";
@@ -21,6 +22,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { href: "/admin/projects", label: "Projects", Icon: FolderKanban },
   { href: "/admin/deliverables", label: "Deliverables", Icon: UploadCloud },
   { href: "/admin/inbox", label: "Studio Inbox", short: "Inbox", Icon: Inbox },
+  { href: "/admin/account", label: "Account", Icon: UserRound },
 ];
 
 export function isAdminActive(pathname: string, href: string): boolean {
