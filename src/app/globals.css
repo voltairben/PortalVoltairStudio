@@ -3,8 +3,8 @@
 /* ============================================================================
    Voltair Studio Portal — design tokens (Tailwind v4, CSS-first).
    Obsidian base + a single persimmon accent reserved for interactive focus.
-   The edit-bay signal: mono, tabular numerals in persimmon for anything that
-   is a measurement — timecode, version, "07 / 10" milestone counts.
+   Sentient (display) + Satoshi (everything else, incl. measurements via
+   .tnum's tabular figures) — no separate mono face.
    ========================================================================== */
 @theme {
   /* Surfaces — obsidian, layered by elevation */
@@ -37,7 +37,8 @@
   /* Type */
   --font-sans: var(--font-satoshi), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-sentient), ui-serif, Georgia, serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+  /* No separate mono face — Satoshi carries measurements too (.tnum below). */
+  --font-mono: var(--font-satoshi), ui-sans-serif, system-ui, sans-serif;
 
   /* Type scale */
   --text-2xs: 0.6875rem;
