@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { useFirebaseUser } from "@/hooks/use-firebase-user";
 import { postStudioReply } from "@/lib/actions/admin";
 import type { InboxData } from "@/lib/data/admin";
+import { normalizeDeliverable } from "@/lib/deliverable-utils";
 import { db } from "@/lib/firebase/client";
 import { relativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -51,7 +52,7 @@ export function StudioInbox({ data }: { data: InboxData }) {
     );
     const unsubDeliverables = onSnapshot(
       collection(db, COLLECTIONS.deliverables),
-      (snap) => setDeliverables(snap.docs.map((d) => d.data() as Deliverable)),
+      (snap) => setDeliverables(snap.docs.map((d) => normalizeDeliverable(d.data() as Deliverable))),
       () => {},
     );
     return () => {
