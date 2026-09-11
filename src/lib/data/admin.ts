@@ -1,7 +1,7 @@
 import "server-only";
 import type { DocumentSnapshot } from "firebase-admin/firestore";
 import { normalizeDeliverable } from "@/lib/deliverable-utils";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { requireAdmin } from "@/lib/firebase/session";
 import {
   type Activity,
@@ -80,6 +80,33 @@ export async function getAllClients(): Promise<ClientRow[]> {
     .map((d) => d.data() as ClientCompany)
     .sort(byCreatedDesc)
     .map((c) => ({ ...c, projectCount: counts.get(c.clientId) ?? 0 }));
+}
+
+export interface AdminRow {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  createdAt: string;
+}
+
+/**
+ * Every studio admin, straight from Firebase Auth custom claims — not a
+ * Firestore mirror. Firestore's `users/{uid}` doc for an admin only exists
+ * once they've saved their profile at least once (or were invited through
+ * inviteStudioAdmin), so claims are the one source that's always accurate.
+ */
+export async function getAllAdmins(): Promise<AdminRow[]> {
+  await requireAdmin();
+  const { users } = await adminAuth.listUsers(1000);
+  return users
+    .filter((u) => u.customClaims?.role === "admin")
+    .map((u) => ({
+      uid: u.uid,
+      email: u.email ?? null,
+      displayName: u.displayName ?? null,
+      createdAt: u.metadata.creationTime,
+    }))
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
 export async function getClientOptions(): Promise<{ clientId: string; name: string }[]> {

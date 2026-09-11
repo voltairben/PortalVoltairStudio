@@ -1,5 +1,6 @@
 import "server-only";
 import { Resend } from "resend";
+import { type AdminInviteEmailArgs, renderAdminInviteEmail } from "./admin-invite-template";
 import { type DecisionEmailArgs, renderDecisionEmail } from "./decision-template";
 import {
   type DeliverableReadyEmailArgs,
@@ -28,6 +29,22 @@ export interface SendResult {
 /** Sends the branded client onboarding email. Throws on Resend error. */
 export async function sendOnboardingEmail(args: OnboardingEmailArgs): Promise<SendResult> {
   const { subject, html, text } = renderOnboardingEmail(args);
+  const { data, error } = await resend().emails.send({
+    from: fromAddress(),
+    to: args.email,
+    subject,
+    html,
+    text,
+  });
+  if (error) {
+    throw new Error(`Resend failed: ${error.name} — ${error.message}`);
+  }
+  return { id: data?.id ?? null };
+}
+
+/** Sends the branded studio-admin invite email. Throws on Resend error. */
+export async function sendAdminInviteEmail(args: AdminInviteEmailArgs): Promise<SendResult> {
+  const { subject, html, text } = renderAdminInviteEmail(args);
   const { data, error } = await resend().emails.send({
     from: fromAddress(),
     to: args.email,

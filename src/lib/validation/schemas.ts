@@ -147,6 +147,13 @@ export const createClientInputSchema = z.object({
 
 export type CreateClientInput = z.infer<typeof createClientInputSchema>;
 
+/** Payload for the "invite a studio admin" action. */
+export const inviteAdminInputSchema = z.object({
+  displayName: z.string().trim().min(1).max(120),
+  email: z.email().trim().toLowerCase(),
+});
+export type InviteAdminInput = z.infer<typeof inviteAdminInputSchema>;
+
 const optionalUrl = z
   .string()
   .trim()

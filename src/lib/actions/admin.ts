@@ -3,12 +3,17 @@
 import { FieldValue } from "firebase-admin/firestore";
 import { revalidatePath } from "next/cache";
 import { writeActivity } from "@/lib/activity";
-import { sendOnboardingEmail } from "@/lib/email/send";
+import { sendAdminInviteEmail, sendOnboardingEmail } from "@/lib/email/send";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { getCurrentUser, type SessionUser } from "@/lib/firebase/session";
 import { shortRef, toDeploymentState } from "@/lib/integrations/deployment";
 import { normalizeRepo } from "@/lib/integrations/repo";
 import { setProjectDeployment } from "@/lib/integrations/pulse-store";
+import {
+  InviteAdminError,
+  type InviteAdminResult as InviteAdminData,
+  inviteAdmin,
+} from "@/lib/onboarding/invite-admin";
 import {
   OnboardError,
   type OnboardResult,
@@ -17,6 +22,7 @@ import {
 import {
   createClientInputSchema,
   createProjectInputSchema,
+  inviteAdminInputSchema,
   studioReplyInputSchema,
   updateMilestonesInputSchema,
   updateProjectInputSchema,
@@ -72,6 +78,40 @@ export async function createClientCompany(input: unknown): Promise<CreateClientR
     return {
       ok: false,
       error: error instanceof OnboardError ? error.message : "Onboarding failed — check the logs.",
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Studio admin invites
+// ---------------------------------------------------------------------------
+
+export interface InviteAdminResult {
+  ok: boolean;
+  data?: InviteAdminData;
+  error?: string;
+}
+
+export async function inviteStudioAdmin(input: unknown): Promise<InviteAdminResult> {
+  const actor = await adminActor();
+  if (!actor) return { ok: false, error: "Not authorized." };
+
+  const parsed = inviteAdminInputSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: issues(parsed.error) };
+
+  try {
+    const data = await inviteAdmin(parsed.data, {
+      auth: adminAuth,
+      db: adminDb,
+      sendAdminInviteEmail,
+    });
+    revalidatePath("/admin/account");
+    return { ok: true, data };
+  } catch (error) {
+    console.error("[inviteStudioAdmin]", error);
+    return {
+      ok: false,
+      error: error instanceof InviteAdminError ? error.message : "Invite failed — check the logs.",
     };
   }
 }

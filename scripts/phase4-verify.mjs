@@ -5,10 +5,14 @@
 import { mkdirSync } from "node:fs";
 import { chromium } from "@playwright/test";
 import { initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
 
 process.env.FIRESTORE_EMULATOR_HOST ??= "127.0.0.1:8080";
-const adminDb = getFirestore(initializeApp({ projectId: "voltairstudio-aa855" }));
+process.env.FIREBASE_AUTH_EMULATOR_HOST ??= "127.0.0.1:9099";
+const fbApp = initializeApp({ projectId: "voltairstudio-aa855" });
+const adminDb = getFirestore(fbApp);
+const fbAuth = getAuth(fbApp);
 
 const BASE = "http://localhost:3000";
 const OUT = "scratch-shots";
@@ -200,6 +204,28 @@ try {
       build.assets.length === 1 &&
       build.coverUrl === build.assets[0]?.url &&
       build.siteUrl === `https://pw-build-${stamp}.example.com`,
+  );
+
+  // --- Invite a studio admin ------------------------------------------
+  await a.goto(`${BASE}/admin/account`);
+  await a.waitForSelector("text=Studio team");
+  await a.click('button:has-text("Invite admin")');
+  const inviteDialog = a.locator("dialog[open]");
+  await inviteDialog.locator('input[name="displayName"]').fill(`PW Admin ${stamp}`);
+  const adminEmail = `pw-admin-${stamp}@voltairstudio.dev`;
+  await inviteDialog.locator('input[name="email"]').fill(adminEmail);
+  await inviteDialog.locator('button:has-text("Send invite")').click();
+  await a.waitForSelector("text=Admin invited", { timeout: 15000 });
+  record("inviting a studio admin succeeds and shows a temp password", true);
+  await a.screenshot({ path: `${OUT}/p4-07-invite-admin.png` });
+  await inviteDialog.locator('button:has-text("Done")').click();
+  await a.waitForSelector(`text=PW Admin ${stamp}`, { timeout: 10000 });
+  record("the new admin appears in the studio team list", true);
+
+  const newAdmin = await fbAuth.getUserByEmail(adminEmail);
+  record(
+    "invited account carries role: admin custom claim",
+    newAdmin.customClaims?.role === "admin",
   );
 
   // --- Unified inbox real-time ---------------------------------------

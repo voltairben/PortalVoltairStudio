@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { AdminInviteModal } from "@/components/admin/admin-invite-modal";
+import { AdminTeamList } from "@/components/admin/admin-team-list";
 import { AccountForm } from "@/components/portal/account-form";
 import { SignOutButton } from "@/components/sign-out-button";
+import { getAllAdmins } from "@/lib/data/admin";
 import { getUserProfile } from "@/lib/data/portal";
 import { requireAdmin } from "@/lib/firebase/session";
 
@@ -8,7 +11,7 @@ export const metadata: Metadata = { title: "Account" };
 
 export default async function AdminAccountPage() {
   const user = await requireAdmin();
-  const profile = await getUserProfile(user.uid);
+  const [profile, admins] = await Promise.all([getUserProfile(user.uid), getAllAdmins()]);
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -34,6 +37,19 @@ export default async function AdminAccountPage() {
           </div>
         </dl>
       </div>
+
+      <section className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-2xs font-semibold uppercase tracking-[0.15em] text-ink-subtle">
+            Studio team{" "}
+            <span className="ml-1 font-mono normal-case tracking-normal text-ink-subtle">
+              {admins.length}
+            </span>
+          </h2>
+          <AdminInviteModal />
+        </div>
+        <AdminTeamList admins={admins} currentUid={user.uid} />
+      </section>
 
       <div className="flex items-center justify-between rounded-xl border border-line-strong bg-surface-1 px-6 py-4">
         <div>
