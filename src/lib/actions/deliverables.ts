@@ -120,6 +120,7 @@ export interface CreateDeliverableResult {
   error?: string;
 }
 
+/** Validate and persist a newly uploaded deliverable, then notify the client. */
 export async function createDeliverable(input: unknown): Promise<CreateDeliverableResult> {
   const actor = await getCurrentUser();
   if (actor?.role !== "admin") return { ok: false, error: "Not authorized." };
@@ -137,6 +138,12 @@ export async function createDeliverable(input: unknown): Promise<CreateDeliverab
     return { ok: false, error: "Project does not belong to that client." };
   }
 
+  const legacyFileType: Record<(typeof d.assets)[number]["type"], Deliverable["fileType"]> = {
+    image: "image",
+    video: "video",
+    pdf: "document",
+  };
+
   const ref = adminDb.collection(COLLECTIONS.deliverables).doc();
   const now = new Date().toISOString();
   const deliverable: Deliverable = {
@@ -144,8 +151,14 @@ export async function createDeliverable(input: unknown): Promise<CreateDeliverab
     projectId: d.projectId,
     clientId: d.clientId,
     name: d.name,
-    fileUrl: d.fileUrl,
-    fileType: d.fileType,
+    // Legacy fields, derived — anything still reading fileUrl/fileType directly
+    // (older code, or a doc round-tripped before normalizeDeliverable() lands
+    // everywhere) keeps working.
+    fileUrl: d.assets[0].url,
+    fileType: legacyFileType[d.assets[0].type],
+    kind: d.kind,
+    assets: d.assets,
+    coverUrl: d.coverUrl,
     version: d.version,
     versionLabel: d.versionLabel,
     status: "pending",
@@ -153,7 +166,7 @@ export async function createDeliverable(input: unknown): Promise<CreateDeliverab
     decidedAt: null,
     createdAt: now,
   };
-  await ref.set({ ...deliverable, storagePath: d.storagePath, milestoneId: d.milestoneId ?? null });
+  await ref.set({ ...deliverable, milestoneId: d.milestoneId ?? null });
 
   const clientSnap = await adminDb.collection(COLLECTIONS.clients).doc(d.clientId).get();
   const client = clientSnap.data() as ClientCompany | undefined;

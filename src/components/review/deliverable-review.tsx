@@ -31,6 +31,10 @@ const PdfViewer = dynamic(
   () => import("@/components/review/pdf-viewer").then((m) => m.PdfViewer),
   { ssr: false, loading: ViewerSkeleton },
 );
+const GalleryViewer = dynamic(
+  () => import("@/components/review/gallery-viewer").then((m) => m.GalleryViewer),
+  { ssr: false, loading: ViewerSkeleton },
+);
 
 const CHANGES_PREFILL = "[Changes Requested] ";
 
@@ -85,6 +89,7 @@ function StudioStatusCard({
   );
 }
 
+/** Select the appropriate asset viewer and render the deliverable review workspace. */
 export function DeliverableReview({
   deliverable,
   projectId,
@@ -103,14 +108,15 @@ export function DeliverableReview({
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="min-w-0">
-        {deliverable.fileType === "video" && <VideoPlayer src={deliverable.fileUrl} />}
-        {deliverable.fileType === "image" && (
-          <ImageViewer src={deliverable.fileUrl} alt={deliverable.name} />
-        )}
-        {deliverable.fileType === "document" && (
-          <PdfViewer src={deliverable.fileUrl} name={deliverable.name} />
-        )}
-        {deliverable.fileType === "other" && (
+        {deliverable.kind === "designs" && deliverable.assets.length > 1 ? (
+          <GalleryViewer assets={deliverable.assets} name={deliverable.name} />
+        ) : deliverable.assets[0]?.type === "video" ? (
+          <VideoPlayer src={deliverable.assets[0].url} />
+        ) : deliverable.assets[0]?.type === "image" ? (
+          <ImageViewer src={deliverable.assets[0].url} alt={deliverable.name} />
+        ) : deliverable.assets[0]?.type === "pdf" ? (
+          <PdfViewer src={deliverable.assets[0].url} name={deliverable.name} />
+        ) : (
           <a
             href={deliverable.fileUrl}
             target="_blank"

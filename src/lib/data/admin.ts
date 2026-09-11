@@ -1,5 +1,6 @@
 import "server-only";
 import type { DocumentSnapshot } from "firebase-admin/firestore";
+import { normalizeDeliverable } from "@/lib/deliverable-utils";
 import { adminDb } from "@/lib/firebase/admin";
 import { requireAdmin } from "@/lib/firebase/session";
 import {
@@ -35,6 +36,7 @@ export interface StudioMetrics {
   approvedDeliverables: number;
 }
 
+/** Load aggregate client, project, deliverable, and review counts for the studio dashboard. */
 export async function getStudioMetrics(): Promise<StudioMetrics> {
   await requireAdmin();
   const [clients, projects, deliverables] = await Promise.all([
@@ -42,7 +44,7 @@ export async function getStudioMetrics(): Promise<StudioMetrics> {
     adminDb.collection(COLLECTIONS.projects).get(),
     adminDb.collection(COLLECTIONS.deliverables).get(),
   ]);
-  const dels = deliverables.docs.map((d) => d.data() as Deliverable);
+  const dels = deliverables.docs.map((d) => normalizeDeliverable(d.data() as Deliverable));
   return {
     activeClients: clients.docs.filter((d) => (d.data() as ClientCompany).status === "active").length,
     activeProjects: projects.docs.filter((d) => (d.data() as Project).status === "active").length,
@@ -111,6 +113,7 @@ export interface AdminProjectView {
   deliverables: Deliverable[];
 }
 
+/** Load one project and its related client and deliverables for the admin view. */
 export async function getAdminProject(projectId: string): Promise<AdminProjectView | null> {
   await requireAdmin();
   const snap = await adminDb.collection(COLLECTIONS.projects).doc(projectId).get();
@@ -123,7 +126,9 @@ export async function getAdminProject(projectId: string): Promise<AdminProjectVi
   return {
     project,
     client: clientSnap.exists ? (clientSnap.data() as ClientCompany) : null,
-    deliverables: delSnap.docs.map((d) => d.data() as Deliverable).sort(byCreatedDesc),
+    deliverables: delSnap.docs
+      .map((d) => normalizeDeliverable(d.data() as Deliverable))
+      .sort(byCreatedDesc),
   };
 }
 
@@ -144,7 +149,7 @@ export async function getAdminDeliverableReview(
     adminDb.collection(COLLECTIONS.deliverables).doc(deliverableId).get(),
   ]);
   if (!projSnap.exists || !delSnap.exists) return null;
-  const deliverable = delSnap.data() as Deliverable;
+  const deliverable = normalizeDeliverable(delSnap.data() as Deliverable);
   if (deliverable.projectId !== projectId) return null;
 
   const commentsSnap = await adminDb
@@ -187,6 +192,7 @@ export async function getUploadTargets(): Promise<UploadTarget[]> {
 
 export type DeliverableRow = Deliverable & { projectName: string; clientName: string };
 
+/** Load all deliverables with the client and project labels needed by admin tables. */
 export async function getAllDeliverables(): Promise<DeliverableRow[]> {
   await requireAdmin();
   const [deliverables, projects, clients] = await Promise.all([
@@ -197,7 +203,7 @@ export async function getAllDeliverables(): Promise<DeliverableRow[]> {
   const projectNames = new Map(projects.docs.map((d) => [d.id, (d.data() as Project).name]));
   const clientNames = new Map(clients.docs.map((d) => [d.id, (d.data() as ClientCompany).name]));
   return deliverables.docs
-    .map((d) => d.data() as Deliverable)
+    .map((d) => normalizeDeliverable(d.data() as Deliverable))
     .sort(byCreatedDesc)
     .map((d) => ({
       ...d,
@@ -213,6 +219,7 @@ export interface InboxData {
   clients: { clientId: string; name: string }[];
 }
 
+/** Load feedback, deliverables, and project labels for the studio inbox. */
 export async function getInboxData(): Promise<InboxData> {
   await requireAdmin();
   const [comments, deliverables, projects, clients] = await Promise.all([
@@ -223,7 +230,7 @@ export async function getInboxData(): Promise<InboxData> {
   ]);
   return {
     comments: comments.docs.map((d) => ({ ...(d.data() as FeedbackItem), commentId: d.id })),
-    deliverables: deliverables.docs.map((d) => d.data() as Deliverable),
+    deliverables: deliverables.docs.map((d) => normalizeDeliverable(d.data() as Deliverable)),
     projects: projects.docs.map((d) => ({ projectId: d.id, name: (d.data() as Project).name })),
     clients: clients.docs.map((d) => ({ clientId: d.id, name: (d.data() as ClientCompany).name })),
   };

@@ -3,18 +3,21 @@
 import {
   getDownloadURL,
   ref,
+  uploadBytes,
   uploadBytesResumable,
   type UploadTask,
 } from "firebase/storage";
-import { Check, FileUp, Pause, Play, UploadCloud, X } from "lucide-react";
+import { Check, FileUp, Images, Pause, Play, UploadCloud, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
+import { captureVideoFrame } from "@/components/admin/video-frame-capture";
 import { Button } from "@/components/ui/button";
 import { createDeliverable } from "@/lib/actions/deliverables";
 import type { UploadTarget } from "@/lib/data/admin";
+import { mapLegacyFileType } from "@/lib/deliverable-utils";
 import { storage } from "@/lib/firebase/client";
-import type { DeliverableFileType } from "@/types";
+import type { DeliverableAsset, DeliverableFileType } from "@/types";
 
 const MAX_BYTES = 500 * 1024 * 1024;
 
@@ -25,7 +28,8 @@ function fileTypeOf(mime: string): DeliverableFileType {
   return "other";
 }
 
-function validate(f: File): string | null {
+/** Return a user-facing validation error for an unsupported upload, if any. */
+function validateOne(f: File): string | null {
   if (f.size > MAX_BYTES) return "Files must be 500 MB or smaller.";
   if (fileTypeOf(f.type) === "other") return "Upload a video, image, or PDF.";
   return null;
@@ -46,6 +50,7 @@ function fmtEta(seconds: number): string {
 
 type Phase = "idle" | "uploading" | "paused" | "finalizing" | "done" | "error";
 
+/** Manage single-file and multi-image deliverable uploads from selection through publishing. */
 export function DeliverableUpload({
   targets,
   preselectedProjectId,
@@ -60,7 +65,13 @@ export function DeliverableUpload({
   const [title, setTitle] = useState("");
   const [versionLabel, setVersionLabel] = useState("v1.0");
   const [milestoneId, setMilestoneId] = useState("");
+
+  // Single-file path (video / PDF / one image) — unchanged resumable upload UX.
   const [file, setFile] = useState<File | null>(null);
+  // Multi-image path (2+ images become one "designs" deliverable) — no
+  // pause/resume; images are small enough that a simple "N of M" is enough.
+  const [imageSet, setImageSet] = useState<File[]>([]);
+  const [multiProgress, setMultiProgress] = useState({ done: 0, total: 0 });
   const [fileError, setFileError] = useState<string | null>(null);
 
   const [phase, setPhase] = useState<Phase>("idle");
@@ -74,31 +85,67 @@ export function DeliverableUpload({
   const sampleRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: 0 });
 
   const target = useMemo(() => targets.find((t) => t.projectId === projectId), [targets, projectId]);
+  const hasSelection = !!file || imageSet.length > 0;
   const canStart =
-    !!target && title.trim().length > 0 && versionLabel.trim().length > 0 && !!file && phase === "idle";
+    !!target &&
+    title.trim().length > 0 &&
+    versionLabel.trim().length > 0 &&
+    hasSelection &&
+    phase === "idle";
 
-  function pickFile(files: FileList | null) {
+  /** Validate a file selection and route it to the single-file or image-set flow. */
+  function pickFiles(fileList: FileList | null) {
     setFileError(null);
-    const f = files?.[0];
-    if (!f) return;
-    const problem = validate(f);
-    if (problem) {
-      setFileError(problem);
+    const picked = Array.from(fileList ?? []);
+    if (picked.length === 0) return;
+
+    if (picked.length === 1) {
+      const problem = validateOne(picked[0]);
+      if (problem) {
+        setFileError(problem);
+        return;
+      }
+      setFile(picked[0]);
+      setImageSet([]);
+      if (!title.trim()) setTitle(picked[0].name.replace(/\.[^.]+$/, ""));
       return;
     }
-    setFile(f);
-    if (!title.trim()) setTitle(f.name.replace(/\.[^.]+$/, ""));
+
+    const allImages = picked.every((f) => fileTypeOf(f.type) === "image");
+    if (!allImages) {
+      setFileError("Select multiple files only when they're all images.");
+      return;
+    }
+    const tooBig = picked.find((f) => f.size > MAX_BYTES);
+    if (tooBig) {
+      setFileError("Files must be 500 MB or smaller.");
+      return;
+    }
+    setImageSet(picked);
+    setFile(null);
+    if (!title.trim()) setTitle("Design set");
   }
 
+  /** Start the upload flow that matches the current file selection. */
   function start() {
-    if (!canStart || !target || !file) return;
+    if (!canStart || !target) return;
+    if (imageSet.length > 0) {
+      void startMultiImage();
+    } else if (file) {
+      startSingleFile(file);
+    }
+  }
+
+  /** Upload one file, optionally capture its video cover, and publish the deliverable. */
+  function startSingleFile(f: File) {
+    if (!target) return;
     setError(null);
     setPhase("uploading");
     sampleRef.current = { bytes: 0, time: Date.now() };
 
-    const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+    const safeName = f.name.replace(/[^\w.\-]+/g, "_");
     const path = `deliverables/${target.clientId}/${target.projectId}/${Date.now()}-${safeName}`;
-    const task = uploadBytesResumable(ref(storage, path), file, { contentType: file.type });
+    const task = uploadBytesResumable(ref(storage, path), f, { contentType: f.type });
     taskRef.current = task;
 
     task.on(
@@ -126,13 +173,28 @@ export function DeliverableUpload({
         try {
           const fileUrl = await getDownloadURL(task.snapshot.ref);
           const numeric = parseInt(versionLabel.replace(/[^\d]/g, ""), 10) || 1;
+          const ft = fileTypeOf(f.type);
+          const { kind, assetType } = mapLegacyFileType(ft);
+
+          let coverUrl: string | null = ft === "image" ? fileUrl : null;
+          if (ft === "video") {
+            const frame = await captureVideoFrame(f);
+            if (frame) {
+              const coverPath = `${path}-cover.jpg`;
+              const coverRef = ref(storage, coverPath);
+              await uploadBytes(coverRef, frame, { contentType: "image/jpeg" });
+              coverUrl = await getDownloadURL(coverRef);
+            }
+          }
+
+          const asset: DeliverableAsset = { storagePath: path, url: fileUrl, type: assetType, label: null };
           const result = await createDeliverable({
             projectId: target.projectId,
             clientId: target.clientId,
             name: title.trim(),
-            fileUrl,
-            storagePath: path,
-            fileType: fileTypeOf(file.type),
+            kind,
+            assets: [asset],
+            coverUrl,
             version: numeric,
             versionLabel: versionLabel.trim(),
             milestoneId: milestoneId || null,
@@ -154,9 +216,58 @@ export function DeliverableUpload({
     );
   }
 
+  /** Upload the selected image set and publish it as one designs deliverable. */
+  async function startMultiImage() {
+    if (!target) return;
+    setError(null);
+    setPhase("uploading");
+    setMultiProgress({ done: 0, total: imageSet.length });
+
+    try {
+      const assets: DeliverableAsset[] = [];
+      for (let i = 0; i < imageSet.length; i++) {
+        const f = imageSet[i];
+        const safeName = f.name.replace(/[^\w.\-]+/g, "_");
+        const path = `deliverables/${target.clientId}/${target.projectId}/${Date.now()}-${i}-${safeName}`;
+        const snapshot = await uploadBytesResumable(ref(storage, path), f, { contentType: f.type });
+        const url = await getDownloadURL(snapshot.ref);
+        assets.push({ storagePath: path, url, type: "image", label: null });
+        setMultiProgress({ done: i + 1, total: imageSet.length });
+      }
+
+      setPhase("finalizing");
+      const numeric = parseInt(versionLabel.replace(/[^\d]/g, ""), 10) || 1;
+      const result = await createDeliverable({
+        projectId: target.projectId,
+        clientId: target.clientId,
+        name: title.trim(),
+        kind: "designs",
+        assets,
+        coverUrl: assets[0]?.url ?? null,
+        version: numeric,
+        versionLabel: versionLabel.trim(),
+        milestoneId: milestoneId || null,
+      });
+      if (result.ok) {
+        setResultId(result.deliverableId ?? null);
+        setPhase("done");
+        router.refresh();
+      } else {
+        setError(result.error ?? "Could not create the deliverable record.");
+        setPhase("error");
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed.");
+      setPhase("error");
+    }
+  }
+
+  /** Clear upload progress and restore the form to its initial state. */
   function reset() {
     taskRef.current = null;
     setFile(null);
+    setImageSet([]);
+    setMultiProgress({ done: 0, total: 0 });
     setTitle("");
     setVersionLabel("v1.0");
     setMilestoneId("");
@@ -169,6 +280,7 @@ export function DeliverableUpload({
   }
 
   const busy = phase === "uploading" || phase === "paused" || phase === "finalizing";
+  const isMulti = imageSet.length > 0;
 
   if (phase === "done") {
     return (
@@ -216,7 +328,7 @@ export function DeliverableUpload({
             <option value="">Select a project…</option>
             {targets.map((t) => (
               <option key={t.projectId} value={t.projectId}>
-                {t.clientName} — {t.name}
+                {t.clientName} · {t.name}
               </option>
             ))}
           </select>
@@ -230,7 +342,7 @@ export function DeliverableUpload({
             value={title}
             disabled={busy}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Brand Film — Cut v3"
+            placeholder="Homepage Design"
             className={inputCls}
           />
         </label>
@@ -269,23 +381,26 @@ export function DeliverableUpload({
       </div>
 
       {/* Dropzone / progress */}
-      {phase === "idle" && !file && (
+      {phase === "idle" && !hasSelection && (
         <label
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
-            pickFile(e.dataTransfer.files);
+            pickFiles(e.dataTransfer.files);
           }}
           className="flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-dashed border-zinc-700 px-4 py-12 text-center transition-colors hover:border-brand-persimmon/60"
         >
           <UploadCloud className="size-7 text-ink-subtle" />
-          <span className="text-[13px] font-medium text-ink">Drop a file or click to browse</span>
-          <span className="text-[11px] text-ink-subtle">MP4, PNG, JPG or PDF · up to 500 MB</span>
+          <span className="text-[13px] font-medium text-ink">
+            Drop a file, or several images for a design set
+          </span>
+          <span className="text-[11px] text-ink-subtle">MP4, PNG, JPG or PDF · up to 500 MB each</span>
           <input
             type="file"
+            multiple
             accept="video/*,image/*,application/pdf"
             className="sr-only"
-            onChange={(e) => pickFile(e.target.files)}
+            onChange={(e) => pickFiles(e.target.files)}
           />
         </label>
       )}
@@ -335,6 +450,50 @@ export function DeliverableUpload({
         </div>
       )}
 
+      {isMulti && (
+        <div className="rounded-xl border border-zinc-800 bg-surface-1 p-4">
+          <div className="flex items-center gap-3">
+            <Images className="size-4 shrink-0 text-ink-subtle" />
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-medium text-ink">
+                {imageSet.length} image{imageSet.length === 1 ? "" : "s"} selected
+              </p>
+              <p className="truncate text-[11px] text-ink-subtle">
+                {imageSet.map((f) => f.name).join(", ")}
+              </p>
+            </div>
+            {phase === "idle" && (
+              <button
+                type="button"
+                aria-label="Remove selection"
+                onClick={() => setImageSet([])}
+                className="text-ink-subtle hover:text-critical"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+
+          {busy && (
+            <div className="mt-3">
+              <div className="h-1.5 overflow-hidden rounded-full bg-surface-3">
+                <div
+                  className="h-full rounded-full bg-brand-persimmon transition-[width] duration-200"
+                  style={{
+                    width: `${multiProgress.total ? (multiProgress.done / multiProgress.total) * 100 : 0}%`,
+                  }}
+                />
+              </div>
+              <p className="tnum mt-2 text-[11px] text-brand-persimmon">
+                {phase === "finalizing"
+                  ? "Finalizing…"
+                  : `Uploading ${multiProgress.done} of ${multiProgress.total}`}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
       {(fileError || error) && (
         <p className="text-[12px] text-critical">{fileError ?? error}</p>
       )}
@@ -346,7 +505,7 @@ export function DeliverableUpload({
             Start upload
           </Button>
         )}
-        {phase === "uploading" && (
+        {phase === "uploading" && !isMulti && (
           <Button variant="outline" onClick={() => taskRef.current?.pause()}>
             <Pause className="size-4" />
             Pause
@@ -358,7 +517,7 @@ export function DeliverableUpload({
             Resume
           </Button>
         )}
-        {(phase === "uploading" || phase === "paused") && (
+        {(phase === "uploading" || phase === "paused") && !isMulti && (
           <Button
             variant="ghost"
             onClick={() => {

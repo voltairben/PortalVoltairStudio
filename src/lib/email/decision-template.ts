@@ -8,6 +8,7 @@ export interface DecisionEmailArgs {
   reviewUrl: string;
 }
 
+/** Render the studio notification sent after a client records a review decision. */
 export function renderDecisionEmail(args: DecisionEmailArgs): {
   subject: string;
   html: string;
@@ -17,8 +18,8 @@ export function renderDecisionEmail(args: DecisionEmailArgs): {
   const verb = approved ? "approved" : "requested changes on";
   const accent = approved ? "#46D19E" : "#FF4F00";
   const subject = approved
-    ? `Approved — ${args.deliverableName}`
-    : `Changes requested — ${args.deliverableName}`;
+    ? `"${args.deliverableName}" approved`
+    : `Changes requested on "${args.deliverableName}"`;
 
   const text = [
     `${args.clientName} ${verb} "${args.deliverableName}" (${args.projectName}).`,

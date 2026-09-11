@@ -1,3 +1,4 @@
+/** Summarize client actions that are currently waiting for attention. */
 export function AttentionPanel({
   pendingCount,
   recent,
@@ -11,9 +12,14 @@ export function AttentionPanel({
         Needs your attention
       </h3>
       <p className="mt-2 text-sm font-medium text-ink">
-        {pendingCount === 0
-          ? "You're all caught up"
-          : `${pendingCount} deliverable${pendingCount === 1 ? "" : "s"} to review`}
+        {pendingCount === 0 ? (
+          "You're all caught up"
+        ) : (
+          <>
+            <span className="text-xl font-display text-brand-persimmon">{pendingCount}</span>{" "}
+            deliverable{pendingCount === 1 ? "" : "s"} to review
+          </>
+        )}
       </p>
       {recent.length > 0 && (
         <ul className="mt-4 space-y-1.5 border-t border-line pt-3.5">

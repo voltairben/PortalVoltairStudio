@@ -11,6 +11,7 @@ import { STAGE_LABELS } from "@/types";
 const STAGES = Object.entries(STAGE_LABELS) as [keyof typeof STAGE_LABELS, string][];
 const STATUSES = ["active", "paused", "completed"] as const;
 
+/** Render and submit the admin form for creating a client project. */
 export function ProjectCreateForm({
   clients,
   openOnLoad = false,
@@ -66,7 +67,7 @@ export function ProjectCreateForm({
             </select>
           </label>
 
-          <TextField name="name" label="Project name" placeholder="Brand Film 2026" required />
+          <TextField name="name" label="Project name" placeholder="Website Redesign" required />
           <TextField name="description" label="Description (optional)" placeholder="Short summary" />
 
           <div className="grid grid-cols-2 gap-3">

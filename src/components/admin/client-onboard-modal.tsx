@@ -8,6 +8,7 @@ import { Modal } from "@/components/ui/modal";
 import { createClientCompany } from "@/lib/actions/admin";
 import type { OnboardResult } from "@/lib/onboarding/onboard-client";
 
+/** Render the modal workflow for creating and inviting a client account. */
 export function ClientOnboardModal({ openOnLoad = false }: { openOnLoad?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(openOnLoad);
@@ -94,7 +95,7 @@ export function ClientOnboardModal({ openOnLoad = false }: { openOnLoad?: boolea
             <Field
               name="initialProjectName"
               label="First project (optional)"
-              placeholder="Brand Film 2026"
+              placeholder="Website Redesign"
             />
             {error && <p className="text-[12px] text-critical">{error}</p>}
             <div className="flex gap-2 pt-1">

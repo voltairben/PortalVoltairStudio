@@ -13,7 +13,10 @@ export { STAGE_LABELS } from "./project";
 export type { PulseDraft, PulseEvent, PulseKind, PulseSource } from "./pulse";
 export type {
   Deliverable,
+  DeliverableAsset,
+  DeliverableAssetType,
   DeliverableFileType,
+  DeliverableKind,
   DeliverableStatus,
 } from "./deliverable";
 export type { CommentAttachment, FeedbackItem } from "./feedback";

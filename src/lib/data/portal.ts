@@ -1,6 +1,7 @@
 import "server-only";
 import type { DocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
+import { normalizeDeliverable } from "@/lib/deliverable-utils";
 import type {
   ClientCompany,
   Deliverable,
@@ -43,6 +44,7 @@ export async function getProject(projectId: string, clientId: string): Promise<P
   return project.clientId === clientId ? project : null;
 }
 
+/** Load the deliverables for one client project. */
 export async function getDeliverables(
   projectId: string,
   clientId: string,
@@ -53,16 +55,17 @@ export async function getDeliverables(
     .where("projectId", "==", projectId)
     .orderBy("createdAt", "desc")
     .get();
-  return snap.docs.map((d) => d.data() as Deliverable);
+  return snap.docs.map((d) => normalizeDeliverable(d.data() as Deliverable));
 }
 
+/** Load a deliverable only when it belongs to the requested client. */
 export async function getDeliverable(
   deliverableId: string,
   clientId: string,
 ): Promise<Deliverable | null> {
   const snap = await adminDb.collection(COLLECTIONS.deliverables).doc(deliverableId).get();
   if (!snap.exists) return null;
-  const deliverable = snap.data() as Deliverable;
+  const deliverable = normalizeDeliverable(snap.data() as Deliverable);
   return deliverable.clientId === clientId ? deliverable : null;
 }
 
@@ -77,7 +80,7 @@ export async function getClientDeliverables(clientId: string): Promise<Deliverab
     .where("clientId", "==", clientId)
     .get();
   return snap.docs
-    .map((d) => d.data() as Deliverable)
+    .map((d) => normalizeDeliverable(d.data() as Deliverable))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
