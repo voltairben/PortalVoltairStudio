@@ -3,7 +3,8 @@ rules_version = '2';
 // Voltair Studio Portal — Storage rules.
 //   deliverables/{clientId}/...  — studio-uploaded deliverable files; tenant reads
 //   attachments/{clientId}/...   — client-attached feedback files; tenant reads + writes
-// Both paths carry {clientId} as the first segment so isolation is an O(1) check.
+//   avatars/{uid}/...            — profile pictures; owner-or-admin writes, any signed-in read
+// The first two paths carry {clientId} as the first segment so isolation is an O(1) check.
 
 service firebase.storage {
   match /b/{bucket}/o {
@@ -32,6 +33,15 @@ service firebase.storage {
       allow write: if (isAdmin() || isClientOf(clientId))
         && request.resource.size < 50 * 1024 * 1024
         && request.resource.contentType.matches('image/.*|video/.*|application/pdf');
+    }
+
+    match /avatars/{uid}/{allPaths=**} {
+      // Profile pictures aren't tenant-sensitive — anyone signed in may see one
+      // (they show up next to comments across both client and studio views).
+      allow read: if isSignedIn();
+      allow write: if (isAdmin() || request.auth.uid == uid)
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
     }
 
     // Everything else is denied by default.

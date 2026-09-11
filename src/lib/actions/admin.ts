@@ -214,6 +214,7 @@ export async function postStudioReply(input: unknown): Promise<ActionResult> {
     userId: actor.uid,
     userName: actor.name ?? "Voltair Studio",
     userRole: "admin",
+    avatarUrl: actor.picture ?? null,
     text: d.text,
     attachments: [],
     timestamp: new Date().toISOString(),

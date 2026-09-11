@@ -3,8 +3,8 @@
 /* ============================================================================
    Voltair Studio Portal — design tokens (Tailwind v4, CSS-first).
    Obsidian base + a single persimmon accent reserved for interactive focus.
-   The edit-bay signal: mono, tabular numerals in persimmon for anything that
-   is a measurement — timecode, version, "07 / 10" milestone counts.
+   Sentient (display) + Satoshi (everything else, incl. measurements via
+   .tnum's tabular figures) — no separate mono face.
    ========================================================================== */
 @theme {
   /* Surfaces — obsidian, layered by elevation */
@@ -35,8 +35,21 @@
   --color-critical: #ff5a5f;
 
   /* Type */
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+  --font-sans: var(--font-satoshi), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sentient), ui-serif, Georgia, serif;
+  /* No separate mono face — Satoshi carries measurements too (.tnum below). */
+  --font-mono: var(--font-satoshi), ui-sans-serif, system-ui, sans-serif;
+
+  /* Type scale */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.8125rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.5rem;
+  --text-5xl: 3.25rem;
 
   /* Radius */
   --radius-sm: 6px;
@@ -70,16 +83,18 @@
     background-color: var(--color-brand-obsidian);
     color: var(--color-ink);
     font-family: var(--font-sans);
-    letter-spacing: -0.006em;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
 
   h1,
   h2,
-  h3 {
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
     text-wrap: balance;
-    letter-spacing: -0.022em;
+    letter-spacing: -0.018em;
   }
 
   /* Tabular figures for measurements */

@@ -15,6 +15,8 @@ export interface FeedbackItem {
   userId: string;
   userName: string;
   userRole: Role;
+  /** Snapshot of the poster's avatar at post time — not backfilled on older comments. */
+  avatarUrl: string | null;
   text: string;
   attachments: CommentAttachment[];
   timestamp: string; // ISO 8601

@@ -3,13 +3,14 @@
 import { CloudOff, Loader2, Paperclip, RadioTower } from "lucide-react";
 import { type Ref, useEffect, useRef } from "react";
 import { CommentComposer, type ComposerHandle } from "@/components/review/comment-composer";
+import { Avatar } from "@/components/ui/avatar";
 import {
   type ThreadComment,
   type ThreadMode,
   type ThreadStatus,
   useFeedbackThread,
 } from "@/hooks/use-feedback-thread";
-import { initialsOf, relativeTime } from "@/lib/format";
+import { relativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { FeedbackItem } from "@/types";
 
@@ -96,17 +97,12 @@ function CommentRow({
   const isStudio = comment.userRole === "admin";
   return (
     <div className="flex gap-3">
-      <span
-        aria-hidden
-        className={cn(
-          "mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border text-[10px] font-semibold",
-          isStudio
-            ? "border-brand-persimmon/40 bg-brand-persimmon/10 text-brand-persimmon"
-            : "border-zinc-800 bg-surface-2 text-ink-muted",
-        )}
-      >
-        {initialsOf(comment.userName)}
-      </span>
+      <Avatar
+        src={comment.avatarUrl}
+        name={comment.userName}
+        tone={isStudio ? "persimmon" : "neutral"}
+        className="mt-0.5 size-7 text-[10px]"
+      />
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">

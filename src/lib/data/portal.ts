@@ -1,7 +1,14 @@
 import "server-only";
 import type { DocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
-import type { ClientCompany, Deliverable, FeedbackItem, Project, PulseEvent } from "@/types";
+import type {
+  ClientCompany,
+  Deliverable,
+  FeedbackItem,
+  Project,
+  PulseEvent,
+  UserProfile,
+} from "@/types";
 import { COLLECTIONS } from "@/types";
 
 /**
@@ -12,6 +19,12 @@ import { COLLECTIONS } from "@/types";
 export async function getClientCompany(clientId: string): Promise<ClientCompany | null> {
   const snap = await adminDb.collection(COLLECTIONS.clients).doc(clientId).get();
   return snap.exists ? (snap.data() as ClientCompany) : null;
+}
+
+/** The signed-in user's own `users/{uid}` profile doc (phone, job title, etc). */
+export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  const snap = await adminDb.collection(COLLECTIONS.users).doc(uid).get();
+  return snap.exists ? (snap.data() as UserProfile) : null;
 }
 
 export async function getProjects(clientId: string): Promise<Project[]> {
@@ -51,6 +64,21 @@ export async function getDeliverable(
   if (!snap.exists) return null;
   const deliverable = snap.data() as Deliverable;
   return deliverable.clientId === clientId ? deliverable : null;
+}
+
+/**
+ * Every deliverable for the client, newest first. Sorted in memory — a client
+ * has tens of deliverables at most, and this avoids a (clientId, createdAt)
+ * composite index that only the dashboard would use.
+ */
+export async function getClientDeliverables(clientId: string): Promise<Deliverable[]> {
+  const snap = await adminDb
+    .collection(COLLECTIONS.deliverables)
+    .where("clientId", "==", clientId)
+    .get();
+  return snap.docs
+    .map((d) => d.data() as Deliverable)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
 /** SSR seed for the Developer Pulse stream; the client listener takes over on mount. */

@@ -73,7 +73,8 @@ export function CommentComposer({
         }
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
-          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+          // Enter sends; Shift+Enter (or any IME composition) inserts a newline.
+          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
             e.preventDefault();
             submit();
           }
@@ -93,7 +94,7 @@ export function CommentComposer({
       )}
 
       <div className="mt-2 flex items-center justify-between">
-        <span className="tnum text-[11px] text-ink-subtle">⌘↵ to send</span>
+        <span className="text-[11px] text-ink-subtle">Enter to send · Shift+Enter for a new line</span>
         <Button
           onClick={submit}
           disabled={disabled || !text.trim()}

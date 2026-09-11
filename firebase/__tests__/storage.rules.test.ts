@@ -1,7 +1,17 @@
 import { assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
 import { getBytes, ref, uploadString } from "firebase/storage";
 import { beforeEach, describe, it } from "vitest";
-import { CLIENT_A, CLIENT_B, USER_A, adminCtx, anonCtx, clientCtx, seedStorage, st } from "./helpers";
+import {
+  CLIENT_A,
+  CLIENT_B,
+  USER_A,
+  USER_B,
+  adminCtx,
+  anonCtx,
+  clientCtx,
+  seedStorage,
+  st,
+} from "./helpers";
 
 beforeEach(async () => {
   await seedStorage(async (storage) => {
@@ -64,6 +74,54 @@ describe("storage — feedback attachments (tenant reads + writes)", () => {
   it("client A cannot read client B's attachment", async () => {
     const storage = st(clientCtx(USER_A, CLIENT_A));
     await assertFails(getBytes(ref(storage, `attachments/${CLIENT_B}/ref.png`)));
+  });
+});
+
+describe("storage — avatars (owner-or-admin writes, any signed-in read)", () => {
+  it("a user uploads their own avatar", async () => {
+    const storage = st(clientCtx(USER_A, CLIENT_A));
+    await assertSucceeds(
+      uploadString(ref(storage, `avatars/${USER_A}/photo.png`), "me", "raw", {
+        contentType: "image/png",
+      }),
+    );
+  });
+
+  it("a user cannot upload into someone else's avatar folder", async () => {
+    const storage = st(clientCtx(USER_A, CLIENT_A));
+    await assertFails(
+      uploadString(ref(storage, `avatars/${USER_B}/photo.png`), "nope", "raw", {
+        contentType: "image/png",
+      }),
+    );
+  });
+
+  it("a non-image avatar upload is rejected", async () => {
+    const storage = st(clientCtx(USER_A, CLIENT_A));
+    await assertFails(
+      uploadString(ref(storage, `avatars/${USER_A}/payload.txt`), "x", "raw", {
+        contentType: "text/plain",
+      }),
+    );
+  });
+
+  it("any signed-in user can read an avatar, regardless of tenant", async () => {
+    await seedStorage(async (storage) => {
+      await uploadString(ref(storage, `avatars/${USER_B}/photo.png`), "them", "raw", {
+        contentType: "image/png",
+      });
+    });
+    const storage = st(clientCtx(USER_A, CLIENT_A));
+    await assertSucceeds(getBytes(ref(storage, `avatars/${USER_B}/photo.png`)));
+  });
+
+  it("unauthenticated access is denied", async () => {
+    const storage = st(anonCtx());
+    await assertFails(
+      uploadString(ref(storage, `avatars/${USER_A}/photo.png`), "x", "raw", {
+        contentType: "image/png",
+      }),
+    );
   });
 });
 

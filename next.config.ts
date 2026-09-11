@@ -12,16 +12,17 @@ import { withSerwist } from "@serwist/turbopack";
 // socket); `next build` runs with NODE_ENV=production and gets the strict policy.
 const isDev = process.env.NODE_ENV !== "production";
 const devScript = isDev ? " 'unsafe-eval'" : "";
-const devConnect = isDev
-  ? " http://127.0.0.1:* http://localhost:* ws://127.0.0.1:* ws://localhost:*"
-  : "";
+// The Storage emulator serves over plain http on 127.0.0.1:9199 — deliverable
+// previews and avatars uploaded in local dev need img/media-src to allow it too.
+const devLocal = isDev ? " http://127.0.0.1:* http://localhost:*" : "";
+const devConnect = isDev ? `${devLocal} ws://127.0.0.1:* ws://localhost:*` : "";
 
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${devScript} https://apis.google.com https://vercel.live`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https:",
-  "media-src 'self' blob: https:",
+  `img-src 'self' data: blob: https:${devLocal}`,
+  `media-src 'self' blob: https:${devLocal}`,
   "font-src 'self' data:",
   `connect-src 'self' https://*.googleapis.com https://*.firebasestorage.app wss://*.firestore.googleapis.com https://apis.google.com https://vercel.live https://*.ingest.vercel.com${devConnect}`,
   "frame-src 'self' https://*.firebaseapp.com https://firebasestorage.googleapis.com https://*.firebasestorage.app https://storage.googleapis.com https://accounts.google.com https://vercel.live",

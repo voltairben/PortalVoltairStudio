@@ -78,6 +78,8 @@ export async function onboardClient(
       role: "client",
       clientId,
       avatarUrl: null,
+      phone: null,
+      jobTitle: null,
       createdAt: now,
     };
 

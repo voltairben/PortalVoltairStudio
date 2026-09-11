@@ -45,8 +45,8 @@ export default async function ProjectPage({ params }: { params: Params }) {
         </Link>
 
         <div className="mt-3 flex flex-wrap items-center gap-2.5">
-          <h1 className="text-2xl font-semibold text-ink">{project.name}</h1>
-          <Badge tone="persimmon">{STAGE_LABELS[project.stage]}</Badge>
+          <h1 className="text-2xl text-ink">{project.name}</h1>
+          <Badge tone="neutral">{STAGE_LABELS[project.stage]}</Badge>
           {project.status === "completed" && <Badge tone="neutral">Completed</Badge>}
           {project.status === "paused" && <Badge tone="neutral">Paused</Badge>}
         </div>
@@ -62,9 +62,11 @@ export default async function ProjectPage({ params }: { params: Params }) {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_320px]">
-        <section className="rounded-xl border border-zinc-800 bg-surface-1 p-5 sm:p-6">
-          <div className="mb-5 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-ink">Milestones</h2>
+        <section className="rounded-xl border border-line-strong bg-surface-1 p-5 sm:p-6">
+          <div className="mb-5 flex items-center justify-between gap-4">
+            <h2 className="text-2xs font-semibold uppercase tracking-[0.15em] text-ink-subtle">
+              Milestones
+            </h2>
             <MilestoneProgress milestones={project.milestones} className="w-32" />
           </div>
           <MilestoneRail milestones={project.milestones} />
@@ -74,7 +76,7 @@ export default async function ProjectPage({ params }: { params: Params }) {
           {project.vercelPreviewUrl ? (
             <StagingPreview url={project.vercelPreviewUrl} />
           ) : (
-            <div className="rounded-xl border border-dashed border-zinc-800 bg-surface-1/50 p-5 text-center text-[12px] text-ink-subtle">
+            <div className="rounded-xl border border-dashed border-line-strong bg-surface-1/50 p-5 text-center text-[12px] text-ink-subtle">
               A staging preview link will appear here during the build phase.
             </div>
           )}
@@ -89,9 +91,11 @@ export default async function ProjectPage({ params }: { params: Params }) {
       />
 
       <section className="space-y-4">
-        <h2 className="text-sm font-semibold text-ink">
+        <h2 className="text-2xs font-semibold uppercase tracking-[0.15em] text-ink-subtle">
           Deliverables{" "}
-          <span className="tnum font-mono text-ink-subtle">({deliverables.length})</span>
+          <span className="tnum ml-1 font-mono normal-case tracking-normal text-ink-subtle">
+            {deliverables.length}
+          </span>
         </h2>
         <DeliverableGrid projectId={projectId} deliverables={deliverables} />
       </section>

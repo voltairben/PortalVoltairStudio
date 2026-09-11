@@ -41,6 +41,21 @@ try {
   await d.waitForSelector("text=Brand Film 2026");
   record("login → dashboard (no flicker redirect)", true);
   record("sidebar visible at 1440", await d.isVisible('[data-testid="sidebar"]'));
+
+  record(
+    "dashboard hero shows the latest deliverable",
+    (await d.isVisible("text=New from Voltair Studio")) ||
+      (await d.isVisible("text=Latest delivery")),
+  );
+  record("attention panel renders", await d.isVisible("text=Needs your attention"));
+  const barColors = await d.$$eval("[data-fill]", (els) =>
+    els.map((e) => getComputedStyle(e).backgroundColor),
+  );
+  const isPersimmon = (c) => /rgba?\(\s*255,\s*79,\s*0/.test(c);
+  record(
+    "at most one project bar is persimmon (the client's turn)",
+    barColors.filter(isPersimmon).length <= 1 && barColors.length >= 2,
+  );
   await d.screenshot({ path: `${OUT}/01-dashboard-1440.png`, fullPage: true });
 
   await d.click("text=Brand Film 2026");
