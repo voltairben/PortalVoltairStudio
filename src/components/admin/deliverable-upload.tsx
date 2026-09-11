@@ -335,7 +335,7 @@ export function DeliverableUpload({
             value={title}
             disabled={busy}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Brand Film — Cut v3"
+            placeholder="Video Cut — v3"
             className={inputCls}
           />
         </label>

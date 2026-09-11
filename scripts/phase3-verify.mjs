@@ -38,7 +38,7 @@ const desktop = await browser.newContext({ viewport: { width: 1440, height: 900 
 const d = await desktop.newPage();
 try {
   await login(d);
-  await d.waitForSelector("text=Brand Film 2026");
+  await d.waitForSelector("text=Client Project — Video");
   record("login → dashboard (no flicker redirect)", true);
   record("sidebar visible at 1440", await d.isVisible('[data-testid="sidebar"]'));
 
@@ -58,13 +58,13 @@ try {
   );
   await d.screenshot({ path: `${OUT}/01-dashboard-1440.png`, fullPage: true });
 
-  await d.click("text=Brand Film 2026");
+  await d.click("text=Client Project — Video");
   await d.waitForURL("**/projects/acme-brand-film");
   await d.waitForSelector("text=Milestones");
   record("project detail + milestone rail", await d.isVisible("text=Client review & revisions"));
   await d.screenshot({ path: `${OUT}/02-project-1440.png`, fullPage: true });
 
-  await d.click("text=Brand Film — Cut v3");
+  await d.click("text=Video Cut — v3");
   await d.waitForURL("**/deliverables/film-cut-v3");
   await d.waitForSelector("video");
   record("deliverable review + custom video player", await d.isVisible("video"));
@@ -133,7 +133,7 @@ const mobile = await browser.newContext({
 const m = await mobile.newPage();
 try {
   await login(m);
-  await m.waitForSelector("text=Brand Film 2026");
+  await m.waitForSelector("text=Client Project — Video");
   record("bottom nav visible at 375", await m.isVisible('[data-testid="bottom-nav"]'));
   record("sidebar hidden at 375", !(await m.isVisible('[data-testid="sidebar"]')));
   await m.screenshot({ path: `${OUT}/05-dashboard-375.png`, fullPage: true });
