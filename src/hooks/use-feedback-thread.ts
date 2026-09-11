@@ -105,6 +105,7 @@ export function useFeedbackThread({
         userId: user.uid,
         userName: authorName || user.displayName || user.email || "Client",
         userRole: "client",
+        avatarUrl: user.photoURL ?? null,
         text: trimmed,
         attachments,
         timestamp: new Date().toISOString(),

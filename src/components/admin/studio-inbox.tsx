@@ -5,12 +5,13 @@ import { ExternalLink, Paperclip, Reply, Send } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { DeliverableStatusBadge } from "@/components/portal/deliverable-status";
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { useFirebaseUser } from "@/hooks/use-firebase-user";
 import { postStudioReply } from "@/lib/actions/admin";
 import type { InboxData } from "@/lib/data/admin";
 import { db } from "@/lib/firebase/client";
-import { initialsOf, relativeTime } from "@/lib/format";
+import { relativeTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { COLLECTIONS, type Deliverable, type DeliverableStatus, type FeedbackItem } from "@/types";
 
@@ -164,16 +165,12 @@ function InboxRow({
       </div>
 
       <div className="mt-2.5 flex gap-3">
-        <span
-          className={cn(
-            "mt-0.5 grid size-7 shrink-0 place-items-center rounded-full border text-[10px] font-semibold",
-            isStudio
-              ? "border-brand-persimmon/40 bg-brand-persimmon/10 text-brand-persimmon"
-              : "border-zinc-800 bg-surface-2 text-ink-muted",
-          )}
-        >
-          {initialsOf(comment.userName)}
-        </span>
+        <Avatar
+          src={comment.avatarUrl}
+          name={comment.userName}
+          tone={isStudio ? "persimmon" : "neutral"}
+          className="mt-0.5 size-7 text-[10px]"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="text-[12px] font-medium text-ink">{comment.userName}</span>
