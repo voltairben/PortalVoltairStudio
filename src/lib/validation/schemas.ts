@@ -200,6 +200,7 @@ export const createDeliverableInputSchema = z.object({
   kind: deliverableKindSchema,
   assets: z.array(deliverableAssetSchema).min(1).max(20),
   coverUrl: z.string().url().nullable(),
+  siteUrl: z.string().trim().url().nullable().optional(),
   version: z.number().int().positive().max(999),
   versionLabel: z.string().trim().min(1).max(20),
   milestoneId: z.string().min(1).nullable().optional(),

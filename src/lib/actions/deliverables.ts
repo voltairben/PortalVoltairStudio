@@ -159,6 +159,7 @@ export async function createDeliverable(input: unknown): Promise<CreateDeliverab
     kind: d.kind,
     assets: d.assets,
     coverUrl: d.coverUrl,
+    siteUrl: d.siteUrl ?? null,
     version: d.version,
     versionLabel: d.versionLabel,
     status: "pending",
