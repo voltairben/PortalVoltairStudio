@@ -321,7 +321,7 @@ export function DeliverableUpload({
             <option value="">Select a project…</option>
             {targets.map((t) => (
               <option key={t.projectId} value={t.projectId}>
-                {t.clientName} — {t.name}
+                {t.clientName} · {t.name}
               </option>
             ))}
           </select>
@@ -335,7 +335,7 @@ export function DeliverableUpload({
             value={title}
             disabled={busy}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Video Cut — v3"
+            placeholder="Homepage Design"
             className={inputCls}
           />
         </label>

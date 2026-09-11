@@ -94,7 +94,7 @@ export function ClientOnboardModal({ openOnLoad = false }: { openOnLoad?: boolea
             <Field
               name="initialProjectName"
               label="First project (optional)"
-              placeholder="Client Project — Website"
+              placeholder="Website Redesign"
             />
             {error && <p className="text-[12px] text-critical">{error}</p>}
             <div className="flex gap-2 pt-1">

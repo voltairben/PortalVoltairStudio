@@ -14,7 +14,7 @@ export function renderDeliverableReadyEmail(args: DeliverableReadyEmailArgs): {
   text: string;
 } {
   const first = args.contactName.split(" ")[0] || args.contactName;
-  const subject = `New deliverable ready — ${args.deliverableName}`;
+  const subject = `New deliverable ready: "${args.deliverableName}"`;
 
   const text = [
     `Hi ${first},`,

@@ -25,7 +25,7 @@ export function GalleryViewer({ assets, name }: { assets: DeliverableAsset[]; na
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={current.url}
-            alt={current.label ?? `${name} — page ${index + 1}`}
+            alt={current.label ?? `${name}, page ${index + 1}`}
             decoding="async"
             className="mx-auto max-h-[68vh] w-auto object-contain"
           />

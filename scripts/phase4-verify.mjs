@@ -115,7 +115,7 @@ try {
   await a.goto(`${BASE}/admin/deliverables/upload`);
   await a.waitForSelector("select");
   await a.selectOption("select", "acme-brand-film");
-  await a.fill('input[placeholder="Video Cut — v3"]', `PW Upload ${stamp}`);
+  await a.fill('input[placeholder="Homepage Design"]', `PW Upload ${stamp}`);
   await a.fill('input[placeholder="v2.1"]', "v9.9");
   await a.setInputFiles('input[type="file"]', {
     name: `pw-upload-${stamp}.png`,
@@ -146,7 +146,7 @@ try {
   await a.goto(`${BASE}/admin/deliverables/upload`);
   await a.waitForSelector("select");
   await a.selectOption("select", "acme-brand-film");
-  await a.fill('input[placeholder="Video Cut — v3"]', `PW MultiImage ${stamp}`);
+  await a.fill('input[placeholder="Homepage Design"]', `PW MultiImage ${stamp}`);
   await a.fill('input[placeholder="v2.1"]', "v1.0");
   await a.setInputFiles("input[type=\"file\"]", [
     { name: `pw-multi-${stamp}-a.png`, mimeType: "image/png", buffer: PNG_1x1 },

@@ -26,7 +26,7 @@ const satoshi = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: { default: "Voltair Studio Portal", template: "%s · Voltair Studio" },
-  description: "The Voltair Studio client portal — projects, deliverables, approvals.",
+  description: "Review projects, deliverables, and approvals from Voltair Studio in one place.",
   applicationName: "Voltair Portal",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

@@ -66,7 +66,7 @@ export function ProjectCreateForm({
             </select>
           </label>
 
-          <TextField name="name" label="Project name" placeholder="Client Project — Website" required />
+          <TextField name="name" label="Project name" placeholder="Website Redesign" required />
           <TextField name="description" label="Description (optional)" placeholder="Short summary" />
 
           <div className="grid grid-cols-2 gap-3">

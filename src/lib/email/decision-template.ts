@@ -17,8 +17,8 @@ export function renderDecisionEmail(args: DecisionEmailArgs): {
   const verb = approved ? "approved" : "requested changes on";
   const accent = approved ? "#46D19E" : "#FF4F00";
   const subject = approved
-    ? `Approved — ${args.deliverableName}`
-    : `Changes requested — ${args.deliverableName}`;
+    ? `"${args.deliverableName}" approved`
+    : `Changes requested on "${args.deliverableName}"`;
 
   const text = [
     `${args.clientName} ${verb} "${args.deliverableName}" (${args.projectName}).`,
