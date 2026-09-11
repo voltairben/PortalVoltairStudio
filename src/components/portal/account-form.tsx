@@ -82,7 +82,11 @@ export function AccountForm({
       const user = auth.currentUser;
       if (!user) throw new Error("Not signed in.");
 
-      await updateProfile(user, { displayName: trimmedName, photoURL: avatarUrl ?? null });
+      // Firebase Auth's updateProfile rejects `photoURL: null` outright ("must
+      // be string") — omit the field entirely when there's no avatar instead
+      // of sending null. Anyone who already had a photo keeps sending its
+      // (unchanged) URL, so this only changes the never-had-a-photo case.
+      await updateProfile(user, avatarUrl ? { displayName: trimmedName, photoURL: avatarUrl } : { displayName: trimmedName });
       await refreshClaims();
       await setDoc(
         doc(db, COLLECTIONS.users, uid),
