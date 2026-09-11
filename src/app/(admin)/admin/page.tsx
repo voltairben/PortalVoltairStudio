@@ -41,7 +41,9 @@ export default async function AdminOverviewPage() {
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-ink-muted">Quick actions</h2>
+        <h2 className="text-2xs font-semibold uppercase tracking-[0.15em] text-ink-subtle">
+          Quick actions
+        </h2>
         <div className="flex flex-wrap gap-2">
           {QUICK_ACTIONS.map((a) => (
             <Link
@@ -56,7 +58,9 @@ export default async function AdminOverviewPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-ink-muted">Recent activity</h2>
+        <h2 className="text-2xs font-semibold uppercase tracking-[0.15em] text-ink-subtle">
+          Recent activity
+        </h2>
         <ActivityStream initial={activity} />
       </section>
     </div>

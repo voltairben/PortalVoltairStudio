@@ -64,20 +64,26 @@ export default async function AdminProjectPage({ params }: { params: Params }) {
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,380px)_1fr]">
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-ink">Project details</h2>
+          <h2 className="text-2xs font-semibold uppercase tracking-[0.15em] text-ink-subtle">
+            Project details
+          </h2>
           <div className="rounded-xl border border-zinc-800 bg-surface-1 p-5">
             <ProjectEditForm project={project} />
           </div>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-ink">Milestone timeline</h2>
+          <h2 className="text-2xs font-semibold uppercase tracking-[0.15em] text-ink-subtle">
+            Milestone timeline
+          </h2>
           <MilestoneEditor projectId={project.projectId} milestones={project.milestones} />
         </section>
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-ink">Developer Pulse</h2>
+        <h2 className="text-2xs font-semibold uppercase tracking-[0.15em] text-ink-subtle">
+          Developer Pulse
+        </h2>
         <div className="rounded-xl border border-zinc-800 bg-surface-1 p-4">
           <ReconcileDeploymentButton
             projectId={project.projectId}
@@ -92,9 +98,11 @@ export default async function AdminProjectPage({ params }: { params: Params }) {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-ink">
+        <h2 className="text-2xs font-semibold uppercase tracking-[0.15em] text-ink-subtle">
           Deliverables{" "}
-          <span className="tnum font-mono text-ink-subtle">({deliverables.length})</span>
+          <span className="tnum ml-1 font-mono normal-case tracking-normal text-ink-subtle">
+            {deliverables.length}
+          </span>
         </h2>
         {deliverables.length === 0 ? (
           <p className="rounded-xl border border-dashed border-zinc-800 bg-surface-1/50 px-4 py-8 text-center text-[13px] text-ink-subtle">
@@ -108,8 +116,13 @@ export default async function AdminProjectPage({ params }: { params: Params }) {
                   href={`/admin/projects/${project.projectId}/deliverables/${d.deliverableId}`}
                   className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2/50"
                 >
-                  <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted">
-                    <FileTypeIcon type={d.fileType} kind={d.kind} className="size-4" />
+                  <span className="grid size-8 shrink-0 place-items-center overflow-hidden rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted">
+                    {d.coverUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={d.coverUrl} alt="" className="size-full object-cover" />
+                    ) : (
+                      <FileTypeIcon type={d.fileType} kind={d.kind} className="size-4" />
+                    )}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-[13px] font-medium text-ink">{d.name}</p>

@@ -60,11 +60,16 @@ export default async function AdminDeliverablesPage() {
                 <tr key={d.deliverableId} className="bg-surface-1/40 hover:bg-surface-1">
                   <td className="px-4 py-3">
                     <Link
-                      href={`/projects/${d.projectId}/deliverables/${d.deliverableId}`}
+                      href={`/admin/projects/${d.projectId}/deliverables/${d.deliverableId}`}
                       className="flex items-center gap-2.5"
                     >
-                      <span className="grid size-7 shrink-0 place-items-center rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted">
-                        <FileTypeIcon type={d.fileType} kind={d.kind} className="size-3.5" />
+                      <span className="grid size-7 shrink-0 place-items-center overflow-hidden rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted">
+                        {d.coverUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={d.coverUrl} alt="" className="size-full object-cover" />
+                        ) : (
+                          <FileTypeIcon type={d.fileType} kind={d.kind} className="size-3.5" />
+                        )}
                       </span>
                       <span className="font-medium text-ink hover:text-brand-persimmon">{d.name}</span>
                       <span className="tnum font-mono text-[11px] text-ink-subtle">
