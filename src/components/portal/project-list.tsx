@@ -27,7 +27,7 @@ export function ProjectList({
                 )}
               </div>
               <Badge
-                tone="neutral"
+                tone={awaiting ? "persimmon-solid" : "neutral"}
                 className="justify-self-end self-start sm:col-start-3 sm:row-start-1 sm:self-center"
               >
                 {STAGE_LABELS[p.stage]}
