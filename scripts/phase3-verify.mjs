@@ -118,6 +118,14 @@ try {
   await d.waitForSelector("text=2 / 3", { timeout: 5000 });
   record("gallery next arrow advances", true);
   await d.screenshot({ path: `${OUT}/09-gallery-1440.png`, fullPage: true });
+
+  // --- Phase C: website deliverable ---------------------------------------
+  await d.goto(`${BASE}/projects/acme-website/deliverables/live-build-v1`);
+  await d.waitForSelector("text=Open the live site", { timeout: 10000 });
+  record("website deliverable shows the Open the live site action", true);
+  const siteHref = await d.getAttribute('a:has-text("Open the live site")', "href");
+  record("Open the live site links to the seeded siteUrl", siteHref === "https://acme-web-staging.vercel.app");
+  await d.screenshot({ path: `${OUT}/10-website-1440.png`, fullPage: true });
 } catch (err) {
   record(`desktop flow: ${err.message.split("\n")[0]}`, false);
   await d.screenshot({ path: `${OUT}/desktop-error.png` }).catch(() => {});

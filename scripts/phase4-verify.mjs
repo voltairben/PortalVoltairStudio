@@ -171,6 +171,37 @@ try {
       multi.coverUrl === multi.assets[0]?.url,
   );
 
+  // --- Deliver a build (website deliverable) --------------------------
+  await a.goto(`${BASE}/admin/deliverables/deliver-build`);
+  await a.waitForSelector("select");
+  await a.selectOption("select", "acme-brand-film");
+  await a.fill('input[placeholder="Live build"]', `PW Build ${stamp}`);
+  await a.fill('input[placeholder="https://acme.com"]', `https://pw-build-${stamp}.example.com`);
+  await a.setInputFiles('input[type="file"]', {
+    name: `pw-build-${stamp}.png`,
+    mimeType: "image/png",
+    buffer: PNG_1x1,
+  });
+  await a.click('button:has-text("Deliver build")');
+  await a.waitForSelector("text=Build delivered", { timeout: 30000 });
+  record("Deliver a build streams a screenshot + creates the deliverable", true);
+  await a.screenshot({ path: `${OUT}/p4-06-deliver-build.png` });
+
+  const buildSnap = await adminDb
+    .collection("deliverables")
+    .where("name", "==", `PW Build ${stamp}`)
+    .get();
+  const build = buildSnap.docs[0]?.data();
+  record(
+    "website deliverable: kind=website, 1 asset, coverUrl = asset url, siteUrl set",
+    !!build &&
+      build.kind === "website" &&
+      Array.isArray(build.assets) &&
+      build.assets.length === 1 &&
+      build.coverUrl === build.assets[0]?.url &&
+      build.siteUrl === `https://pw-build-${stamp}.example.com`,
+  );
+
   // --- Unified inbox real-time ---------------------------------------
   const client2 = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const c = await client2.newPage();
