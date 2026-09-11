@@ -230,6 +230,26 @@ const deliverables = [
     decidedAt: iso(-2),
     createdAt: iso(-5),
   },
+  {
+    deliverableId: "live-build-v1",
+    projectId: "acme-website",
+    clientId: "acme",
+    name: "Live build",
+    fileUrl: "https://picsum.photos/id/1029/1600/1000",
+    fileType: "image",
+    kind: "website",
+    assets: [
+      { storagePath: "", url: "https://picsum.photos/id/1029/1600/1000", type: "image", label: null },
+    ],
+    coverUrl: "https://picsum.photos/id/1029/1600/1000",
+    siteUrl: "https://acme-web-staging.vercel.app",
+    version: 1,
+    versionLabel: null,
+    status: "approved",
+    feedbackCount: 0,
+    decidedAt: iso(-1),
+    createdAt: iso(-1),
+  },
 ];
 
 for (const deliverable of deliverables) {
