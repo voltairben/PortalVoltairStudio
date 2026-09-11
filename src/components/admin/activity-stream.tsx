@@ -55,7 +55,7 @@ export function ActivityStream({ initial }: { initial: Activity[] }) {
         const Icon = ICONS[item.type];
         const href =
           item.projectId && item.deliverableId
-            ? `/projects/${item.projectId}/deliverables/${item.deliverableId}`
+            ? `/admin/projects/${item.projectId}/deliverables/${item.deliverableId}`
             : item.projectId
               ? `/admin/projects/${item.projectId}`
               : "/admin/clients";

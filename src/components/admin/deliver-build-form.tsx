@@ -149,7 +149,7 @@ export function DeliverBuildForm({
         <div className="mt-5 flex justify-center gap-2">
           {resultId && target && (
             <Link
-              href={`/projects/${target.projectId}/deliverables/${resultId}`}
+              href={`/admin/projects/${target.projectId}/deliverables/${resultId}`}
               className="inline-flex h-9 items-center rounded-lg border border-zinc-800 px-3.5 text-[13px] text-ink hover:border-brand-persimmon hover:text-brand-persimmon"
             >
               View review page
