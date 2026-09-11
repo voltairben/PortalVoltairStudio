@@ -209,8 +209,20 @@ const deliverables = [
     projectId: "acme-website",
     clientId: "acme",
     name: "Homepage design — round 1",
+    // Legacy fields, kept in sync with assets[0] — this deliverable is
+    // deliberately the one seeded doc that also exercises the new fields, so
+    // local dev has a real 3-image gallery to open; every other seeded
+    // deliverable above stays old-shaped on purpose (proves normalizeDeliverable()
+    // handles genuine legacy docs, not just the unit test).
     fileUrl: "https://picsum.photos/id/180/1600/2400",
     fileType: "image",
+    kind: "designs",
+    assets: [
+      { storagePath: "", url: "https://picsum.photos/id/180/1600/2400", type: "image", label: "Homepage" },
+      { storagePath: "", url: "https://picsum.photos/id/1015/1600/2400", type: "image", label: "Product page" },
+      { storagePath: "", url: "https://picsum.photos/id/1041/1600/2400", type: "image", label: "About page" },
+    ],
+    coverUrl: "https://picsum.photos/id/180/1600/2400",
     version: 1,
     versionLabel: null,
     status: "changes-requested",
