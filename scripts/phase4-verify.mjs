@@ -137,9 +137,38 @@ try {
     !!del &&
       del.status === "pending" &&
       del.clientId === "acme" &&
-      typeof del.storagePath === "string" &&
-      del.storagePath.startsWith("deliverables/acme/") &&
+      typeof del.assets?.[0]?.storagePath === "string" &&
+      del.assets[0].storagePath.startsWith("deliverables/acme/") &&
       del.versionLabel === "v9.9",
+  );
+
+  // --- Multi-image upload → "designs" set -----------------------------
+  await a.goto(`${BASE}/admin/deliverables/upload`);
+  await a.waitForSelector("select");
+  await a.selectOption("select", "acme-brand-film");
+  await a.fill('input[placeholder="Brand Film — Cut v3"]', `PW MultiImage ${stamp}`);
+  await a.fill('input[placeholder="v2.1"]', "v1.0");
+  await a.setInputFiles("input[type=\"file\"]", [
+    { name: `pw-multi-${stamp}-a.png`, mimeType: "image/png", buffer: PNG_1x1 },
+    { name: `pw-multi-${stamp}-b.png`, mimeType: "image/png", buffer: PNG_1x1 },
+  ]);
+  record("multi-image drop shows a 2-image summary", await a.isVisible("text=2 images selected"));
+  await a.click('button:has-text("Start upload")');
+  await a.waitForSelector("text=Deliverable published", { timeout: 30000 });
+  await a.screenshot({ path: `${OUT}/p4-05-multi-upload.png` });
+
+  const multiSnap = await adminDb
+    .collection("deliverables")
+    .where("name", "==", `PW MultiImage ${stamp}`)
+    .get();
+  const multi = multiSnap.docs[0]?.data();
+  record(
+    "multi-image deliverable: kind=designs, 2 assets, coverUrl = first asset",
+    !!multi &&
+      multi.kind === "designs" &&
+      Array.isArray(multi.assets) &&
+      multi.assets.length === 2 &&
+      multi.coverUrl === multi.assets[0]?.url,
   );
 
   // --- Unified inbox real-time ---------------------------------------

@@ -109,6 +109,15 @@ try {
       c.deliverableId === "film-cut-v3" &&
       c.userRole === "client",
   );
+
+  // --- Phase B: multi-image gallery -------------------------------------
+  await d.goto(`${BASE}/projects/acme-website/deliverables/web-design-review`);
+  await d.waitForSelector("text=1 / 3", { timeout: 10000 });
+  record("gallery viewer shows a 3-image counter", true);
+  await d.click('button[aria-label="Next"]');
+  await d.waitForSelector("text=2 / 3", { timeout: 5000 });
+  record("gallery next arrow advances", true);
+  await d.screenshot({ path: `${OUT}/09-gallery-1440.png`, fullPage: true });
 } catch (err) {
   record(`desktop flow: ${err.message.split("\n")[0]}`, false);
   await d.screenshot({ path: `${OUT}/desktop-error.png` }).catch(() => {});
