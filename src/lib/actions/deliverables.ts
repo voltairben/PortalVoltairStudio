@@ -117,6 +117,8 @@ async function decide(input: unknown, status: Decision): Promise<DecisionResult>
 export interface CreateDeliverableResult {
   ok: boolean;
   deliverableId?: string;
+  /** True only if the client's ready-for-review email actually sent. */
+  emailSent?: boolean;
   error?: string;
 }
 
@@ -201,11 +203,9 @@ export async function createDeliverable(input: unknown): Promise<CreateDeliverab
       console.error("[createDeliverable] client email failed", error);
     }
   }
-  void emailSent;
-
   revalidatePath("/admin/deliverables");
   revalidatePath("/admin");
   revalidatePath(`/admin/projects/${d.projectId}`);
   revalidatePath(`/projects/${d.projectId}`);
-  return { ok: true, deliverableId: ref.id };
+  return { ok: true, deliverableId: ref.id, emailSent };
 }

@@ -80,6 +80,7 @@ export function DeliverableUpload({
   const [eta, setEta] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [resultId, setResultId] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   const taskRef = useRef<UploadTask | null>(null);
   const sampleRef = useRef<{ bytes: number; time: number }>({ bytes: 0, time: 0 });
@@ -172,7 +173,7 @@ export function DeliverableUpload({
         setPhase("finalizing");
         try {
           const fileUrl = await getDownloadURL(task.snapshot.ref);
-          const numeric = parseInt(versionLabel.replace(/[^\d]/g, ""), 10) || 1;
+          const numeric = parseInt(versionLabel.match(/\d+/)?.[0] ?? "1", 10) || 1;
           const ft = fileTypeOf(f.type);
           const { kind, assetType } = mapLegacyFileType(ft);
 
@@ -201,6 +202,7 @@ export function DeliverableUpload({
           });
           if (result.ok) {
             setResultId(result.deliverableId ?? null);
+            setEmailSent(!!result.emailSent);
             setPhase("done");
             router.refresh();
           } else {
@@ -236,7 +238,7 @@ export function DeliverableUpload({
       }
 
       setPhase("finalizing");
-      const numeric = parseInt(versionLabel.replace(/[^\d]/g, ""), 10) || 1;
+      const numeric = parseInt(versionLabel.match(/\d+/)?.[0] ?? "1", 10) || 1;
       const result = await createDeliverable({
         projectId: target.projectId,
         clientId: target.clientId,
@@ -250,6 +252,7 @@ export function DeliverableUpload({
       });
       if (result.ok) {
         setResultId(result.deliverableId ?? null);
+        setEmailSent(!!result.emailSent);
         setPhase("done");
         router.refresh();
       } else {
@@ -277,6 +280,7 @@ export function DeliverableUpload({
     setEta(0);
     setError(null);
     setResultId(null);
+    setEmailSent(false);
   }
 
   const busy = phase === "uploading" || phase === "paused" || phase === "finalizing";
@@ -290,7 +294,9 @@ export function DeliverableUpload({
         </span>
         <p className="mt-3 text-[15px] font-medium text-ink">Deliverable published</p>
         <p className="mt-1 text-[13px] text-ink-muted">
-          {target?.clientName} was emailed a review link.
+          {emailSent
+            ? `${target?.clientName} was emailed a review link.`
+            : `Saved — the notification email to ${target?.clientName} didn't send. You may want to follow up directly.`}
         </p>
         <div className="mt-5 flex justify-center gap-2">
           {resultId && target && (

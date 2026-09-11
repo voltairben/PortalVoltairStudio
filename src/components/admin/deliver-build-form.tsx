@@ -56,6 +56,7 @@ export function DeliverBuildForm({
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [resultId, setResultId] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   const target = useMemo(() => targets.find((t) => t.projectId === projectId), [targets, projectId]);
   const canStart =
@@ -92,7 +93,7 @@ export function DeliverBuildForm({
       });
       const url = await getDownloadURL(snapshot.ref);
       const asset: DeliverableAsset = { storagePath: path, url, type: "image", label: null };
-      const numeric = parseInt(versionLabel.replace(/[^\d]/g, ""), 10) || 1;
+      const numeric = parseInt(versionLabel.match(/\d+/)?.[0] ?? "1", 10) || 1;
 
       const result = await createDeliverable({
         projectId: target.projectId,
@@ -108,6 +109,7 @@ export function DeliverBuildForm({
       });
       if (result.ok) {
         setResultId(result.deliverableId ?? null);
+        setEmailSent(!!result.emailSent);
         setPhase("done");
         router.refresh();
       } else {
@@ -129,6 +131,7 @@ export function DeliverBuildForm({
     setPhase("idle");
     setError(null);
     setResultId(null);
+    setEmailSent(false);
   }
 
   if (phase === "done") {
@@ -139,7 +142,9 @@ export function DeliverBuildForm({
         </span>
         <p className="mt-3 text-[15px] font-medium text-ink">Build delivered</p>
         <p className="mt-1 text-[13px] text-ink-muted">
-          {target?.clientName} was emailed a review link.
+          {emailSent
+            ? `${target?.clientName} was emailed a review link.`
+            : `Saved — the notification email to ${target?.clientName} didn't send. You may want to follow up directly.`}
         </p>
         <div className="mt-5 flex justify-center gap-2">
           {resultId && target && (
