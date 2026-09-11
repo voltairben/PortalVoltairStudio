@@ -4,7 +4,7 @@ import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Deliverable } from "@/types";
 
-/** Render a deliverable cover image or its file-type fallback. */
+/** Render a deliverable's cover image, or a brand-flame placeholder when it has none. */
 function Cover({ d, pending }: { d: Deliverable; pending: boolean }) {
   return (
     <div
