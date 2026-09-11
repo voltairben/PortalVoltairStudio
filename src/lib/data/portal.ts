@@ -1,7 +1,14 @@
 import "server-only";
 import type { DocumentSnapshot } from "firebase-admin/firestore";
 import { adminDb } from "@/lib/firebase/admin";
-import type { ClientCompany, Deliverable, FeedbackItem, Project, PulseEvent } from "@/types";
+import type {
+  ClientCompany,
+  Deliverable,
+  FeedbackItem,
+  Project,
+  PulseEvent,
+  UserProfile,
+} from "@/types";
 import { COLLECTIONS } from "@/types";
 
 /**
@@ -12,6 +19,12 @@ import { COLLECTIONS } from "@/types";
 export async function getClientCompany(clientId: string): Promise<ClientCompany | null> {
   const snap = await adminDb.collection(COLLECTIONS.clients).doc(clientId).get();
   return snap.exists ? (snap.data() as ClientCompany) : null;
+}
+
+/** The signed-in user's own `users/{uid}` profile doc (phone, job title, etc). */
+export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  const snap = await adminDb.collection(COLLECTIONS.users).doc(uid).get();
+  return snap.exists ? (snap.data() as UserProfile) : null;
 }
 
 export async function getProjects(clientId: string): Promise<Project[]> {
