@@ -6,12 +6,12 @@ import type { Deliverable } from "@/types";
 function Cover({ d }: { d: Deliverable }) {
   return (
     <div className="brand-glow relative flex aspect-[20/9] w-full items-center justify-center bg-surface-2">
-      {/* Flame sits behind — visible for non-image kinds and if the image fails. */}
+      {/* Flame sits behind — visible when there's no cover yet, or if it fails to load. */}
       <Flame className="size-8 text-brand-persimmon/70" />
-      {d.fileType === "image" && (
+      {d.coverUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
-          src={d.fileUrl}
+          src={d.coverUrl}
           alt=""
           className="absolute inset-0 size-full object-cover"
           loading="eager"

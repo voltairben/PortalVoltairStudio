@@ -27,6 +27,12 @@ export function DeliverableGrid({
           href={`/projects/${projectId}/deliverables/${d.deliverableId}`}
           className="group flex flex-col rounded-xl border border-zinc-800 bg-surface-1 p-4 transition-[border-color,box-shadow] duration-200 hover:glow-persimmon"
         >
+          {d.coverUrl && (
+            <div className="-mx-4 -mt-4 mb-3 aspect-video overflow-hidden rounded-t-xl border-b border-zinc-800 bg-surface-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={d.coverUrl} alt="" className="size-full object-cover" loading="lazy" />
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <span className="grid size-9 place-items-center rounded-lg border border-zinc-800 bg-surface-2 text-ink-muted transition-colors group-hover:text-brand-persimmon">
               <FileTypeIcon type={d.fileType} className="size-4" />
