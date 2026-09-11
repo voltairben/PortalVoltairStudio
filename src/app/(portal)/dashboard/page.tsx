@@ -38,7 +38,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-10">
       <header>
-        <h1 className="text-2xl text-ink">
+        <h1 className="text-3xl text-ink sm:text-4xl">
           {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
         </h1>
         <p className="mt-1 text-sm text-ink-muted">

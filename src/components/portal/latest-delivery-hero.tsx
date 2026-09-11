@@ -42,9 +42,9 @@ export function LatestDeliveryHero({
   const href = `/projects/${d.projectId}/deliverables/${d.deliverableId}`;
 
   return (
-    <div className="overflow-hidden rounded-xl border border-line-strong bg-surface-1">
+    <div className="hero-rise-in overflow-hidden rounded-xl border border-line-strong bg-surface-1">
       <Cover d={d} pending={!!pending} />
-      <div className="p-4 sm:p-5">
+      <div className="p-4 sm:p-6">
         {pending ? (
           <span className="inline-flex items-center rounded-full bg-brand-persimmon px-2.5 py-1 text-2xs font-semibold uppercase tracking-[0.15em] text-brand-persimmon-fg">
             New from Voltair Studio
@@ -54,11 +54,11 @@ export function LatestDeliveryHero({
             Latest delivery
           </p>
         )}
-        <h2 className="mt-1.5 text-lg text-ink">{d.name}</h2>
+        <h2 className="mt-2 text-2xl leading-tight text-ink sm:text-3xl">{d.name}</h2>
         {pending ? (
           <Link
             href={href}
-            className="mt-3.5 inline-flex h-10 items-center gap-2 rounded-lg bg-brand-persimmon px-4 text-[13px] font-semibold text-brand-persimmon-fg transition-opacity hover:opacity-90"
+            className="mt-4 inline-flex h-11 items-center gap-2 rounded-lg bg-brand-persimmon px-5 text-sm font-semibold text-brand-persimmon-fg shadow-[0_10px_34px_-12px_rgb(255_79_0/0.65)] transition-transform hover:scale-[1.02] hover:opacity-95"
           >
             Open review
             <ArrowRight className="size-4" />
