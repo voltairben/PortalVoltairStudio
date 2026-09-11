@@ -1,4 +1,4 @@
-import { ChevronLeft, UploadCloud } from "lucide-react";
+import { ChevronLeft, Globe, UploadCloud } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -42,13 +42,22 @@ export default async function AdminProjectPage({ params }: { params: Params }) {
           title={project.name}
           subtitle={client?.name ?? project.clientId}
           action={
-            <Link
-              href={`/admin/deliverables/upload?project=${project.projectId}`}
-              className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-800 bg-surface-1 px-3.5 text-[13px] font-medium text-ink transition-colors hover:border-brand-persimmon hover:text-brand-persimmon"
-            >
-              <UploadCloud className="size-4" />
-              Upload deliverable
-            </Link>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/admin/deliverables/deliver-build?project=${project.projectId}`}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-800 bg-surface-1 px-3.5 text-[13px] font-medium text-ink transition-colors hover:border-brand-persimmon hover:text-brand-persimmon"
+              >
+                <Globe className="size-4" />
+                Deliver a build
+              </Link>
+              <Link
+                href={`/admin/deliverables/upload?project=${project.projectId}`}
+                className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-800 bg-surface-1 px-3.5 text-[13px] font-medium text-ink transition-colors hover:border-brand-persimmon hover:text-brand-persimmon"
+              >
+                <UploadCloud className="size-4" />
+                Upload deliverable
+              </Link>
+            </div>
           }
         />
       </div>

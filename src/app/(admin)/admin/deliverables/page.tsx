@@ -1,4 +1,4 @@
-import { UploadCloud } from "lucide-react";
+import { Globe, UploadCloud } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/admin/page-header";
@@ -20,13 +20,22 @@ export default async function AdminDeliverablesPage() {
         title="Deliverables"
         subtitle={`${deliverables.length} published across all projects`}
         action={
-          <Link
-            href="/admin/deliverables/upload"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-persimmon px-4 text-[13px] font-medium text-brand-persimmon-fg transition-colors hover:bg-brand-persimmon-bright"
-          >
-            <UploadCloud className="size-4" />
-            Upload deliverable
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href="/admin/deliverables/deliver-build"
+              className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-800 bg-surface-1 px-3.5 text-[13px] font-medium text-ink transition-colors hover:border-brand-persimmon hover:text-brand-persimmon"
+            >
+              <Globe className="size-4" />
+              Deliver a build
+            </Link>
+            <Link
+              href="/admin/deliverables/upload"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-brand-persimmon px-4 text-[13px] font-medium text-brand-persimmon-fg transition-colors hover:bg-brand-persimmon-bright"
+            >
+              <UploadCloud className="size-4" />
+              Upload deliverable
+            </Link>
+          </div>
         }
       />
 
