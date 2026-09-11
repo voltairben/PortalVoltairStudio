@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { writeActivity } from "@/lib/activity";
 import { sendDeliverableReadyEmail, sendStudioDecisionEmail } from "@/lib/email/send";
-import { adminDb } from "@/lib/firebase/admin";
+import { adminDb, adminStorage } from "@/lib/firebase/admin";
 import { getCurrentUser } from "@/lib/firebase/session";
 import {
   createDeliverableInputSchema,
@@ -208,4 +208,66 @@ export async function createDeliverable(input: unknown): Promise<CreateDeliverab
   revalidatePath(`/admin/projects/${d.projectId}`);
   revalidatePath(`/projects/${d.projectId}`);
   return { ok: true, deliverableId: ref.id, emailSent };
+}
+
+// ---------------------------------------------------------------------------
+// Admin: delete a deliverable
+// ---------------------------------------------------------------------------
+
+export interface DeleteDeliverableResult {
+  ok: boolean;
+  error?: string;
+}
+
+/**
+ * Permanently removes a deliverable: its Storage assets, every comment on it,
+ * and the deliverable doc itself. Irreversible. `confirmName` must match the
+ * deliverable's name exactly (mirrors deleteClientCompany's confirm pattern).
+ */
+export async function deleteDeliverable(
+  deliverableId: unknown,
+  confirmName: unknown,
+): Promise<DeleteDeliverableResult> {
+  const actor = await getCurrentUser();
+  if (actor?.role !== "admin") return { ok: false, error: "Not authorized." };
+  if (typeof deliverableId !== "string" || !deliverableId) {
+    return { ok: false, error: "Missing deliverable id." };
+  }
+
+  const ref = adminDb.collection(COLLECTIONS.deliverables).doc(deliverableId);
+  const snap = await ref.get();
+  if (!snap.exists) return { ok: false, error: "Deliverable not found." };
+  const deliverable = snap.data() as Deliverable;
+
+  if (typeof confirmName !== "string" || confirmName.trim() !== deliverable.name) {
+    return { ok: false, error: "Type the deliverable name exactly to confirm." };
+  }
+
+  // Best-effort Storage cleanup — seed/demo assets can carry an empty
+  // storagePath (external picsum URLs), so skip those rather than erroring.
+  const bucket = adminStorage.bucket();
+  for (const asset of deliverable.assets ?? []) {
+    if (!asset.storagePath) continue;
+    await bucket
+      .file(asset.storagePath)
+      .delete()
+      .catch((e) => console.error("[deleteDeliverable] storage", e));
+  }
+
+  // Batch-delete every comment on this deliverable (Firestore batches cap at 500 writes).
+  const commentDocs = (
+    await adminDb.collection(COLLECTIONS.comments).where("deliverableId", "==", deliverableId).get()
+  ).docs;
+  for (let i = 0; i < commentDocs.length; i += 400) {
+    const batch = adminDb.batch();
+    for (const d of commentDocs.slice(i, i + 400)) batch.delete(d.ref);
+    await batch.commit();
+  }
+
+  await ref.delete();
+  revalidatePath("/admin/deliverables");
+  revalidatePath("/admin");
+  revalidatePath(`/admin/projects/${deliverable.projectId}`);
+  revalidatePath(`/projects/${deliverable.projectId}`);
+  return { ok: true };
 }

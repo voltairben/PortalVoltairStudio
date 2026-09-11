@@ -257,6 +257,19 @@ try {
   await c.waitForSelector(`text=${studioReply}`, { timeout: 15000 });
   record("studio reply from the review screen reaches the client thread", true);
   await client2.close();
+
+  // --- Delete a deliverable -------------------------------------------
+  await a.goto(`${BASE}/admin/projects/${del.projectId}/deliverables/${del.deliverableId}`);
+  await a.click('button:has-text("Delete deliverable")');
+  const deleteDialog = a.locator("dialog[open]");
+  await deleteDialog.waitFor({ state: "visible" });
+  await deleteDialog.locator("input").fill(del.name);
+  await deleteDialog.locator('button:has-text("Delete deliverable")').click();
+  await a.waitForURL(`**/admin/projects/${del.projectId}`, { timeout: 15000 });
+  record("deleting a deliverable redirects back to the project page", true);
+
+  const deletedSnap = await adminDb.collection("deliverables").doc(del.deliverableId).get();
+  record("deleted deliverable doc no longer exists", !deletedSnap.exists);
 } catch (err) {
   record(`admin flow: ${err.message.split("\n")[0]}`, false);
   await a.screenshot({ path: `${OUT}/p4-error.png` }).catch(() => {});
