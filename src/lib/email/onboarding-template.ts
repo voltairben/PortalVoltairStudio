@@ -37,7 +37,15 @@ export function renderOnboardingEmail(args: OnboardingEmailArgs): RenderedEmail 
     `Email:   ${args.email}`,
     `Temporary password: ${args.tempPassword}`,
     ``,
-    `Please change your password after your first sign-in.`,
+    `Getting started:`,
+    `1. Sign in with the email and temporary password above.`,
+    `2. Your dashboard shows every active project for ${args.companyName}.`,
+    `3. When we publish new work, review it, then approve it or leave feedback right there.`,
+    ``,
+    `Tip: open that link on your phone and add it to your home screen for a`,
+    `full-screen app — no App Store needed, and it still works offline.`,
+    ``,
+    `Forgot your password later? Use "Forgot password?" on the sign-in screen.`,
     `This portal is invite-only and access is limited to your team.`,
     ``,
     `— Voltair Studio`,
@@ -90,10 +98,34 @@ export function renderOnboardingEmail(args: OnboardingEmailArgs): RenderedEmail 
         </td></tr>
       </table>
     </td></tr>
+    <tr><td style="padding:28px 40px 0 40px;">
+      <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#8F8F8F;margin-bottom:12px;">
+        Getting started
+      </div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+        ${[
+          "Sign in with the email and temporary password above.",
+          `Your dashboard shows every active project for <span style="color:#FFFFFF;">${escapeHtml(args.companyName)}</span>.`,
+          "When we publish new work, review it — approve it or leave feedback right there.",
+        ]
+          .map(
+            (step, i) => `
+        <tr>
+          <td valign="top" width="28" style="padding-bottom:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:13px;color:#FF4F00;">${i + 1}.</td>
+          <td valign="top" style="padding-bottom:12px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:14px;line-height:1.6;color:#C9C9C9;">${step}</td>
+        </tr>`,
+          )
+          .join("")}
+      </table>
+      <p style="margin:4px 0 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#8F8F8F;">
+        Tip: open that link on your phone and add it to your home screen for a
+        full-screen app — no App Store needed, and it still works offline.
+      </p>
+    </td></tr>
     <tr><td style="padding:24px 40px 36px 40px;">
       <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#8F8F8F;">
-        Change your password after your first sign-in. This portal is invite-only —
-        access stays limited to your team.
+        Forgot your password later? Use “Forgot password?” on the sign-in screen.
+        This portal is invite-only — access stays limited to your team.
       </p>
     </td></tr>
     <tr><td style="padding:20px 40px;border-top:1px solid #1E1E1E;">
