@@ -30,7 +30,7 @@ export function renderOnboardingEmail(args: OnboardingEmailArgs): RenderedEmail 
   const text = [
     `Welcome to the Voltair Studio Portal, ${firstName}.`,
     ``,
-    `Your private workspace for ${args.companyName} is live — track projects,`,
+    `Your private workspace for ${args.companyName} is live. Track projects,`,
     `review deliverables, and leave feedback in one place.`,
     ``,
     `Sign in: ${loginUrl}`,
@@ -43,12 +43,12 @@ export function renderOnboardingEmail(args: OnboardingEmailArgs): RenderedEmail 
     `3. When we publish new work, review it, then approve it or leave feedback right there.`,
     ``,
     `Tip: open that link on your phone and add it to your home screen for a`,
-    `full-screen app — no App Store needed, and it still works offline.`,
+    `full-screen app. No App Store needed, and it still works offline.`,
     ``,
     `Forgot your password later? Use "Forgot password?" on the sign-in screen.`,
     `This portal is invite-only and access is limited to your team.`,
     ``,
-    `— Voltair Studio`,
+    `Voltair Studio`,
   ].join("\n");
 
   const html = `<!doctype html>
@@ -75,7 +75,7 @@ export function renderOnboardingEmail(args: OnboardingEmailArgs): RenderedEmail 
       <p style="margin:14px 0 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:15px;line-height:1.6;color:#8F8F8F;">
         Your private portal for <span style="color:#FFFFFF;">${escapeHtml(args.companyName)}</span>
         is live. Track project progress, review video and image deliverables, approve work,
-        and leave feedback — all in one place.
+        and leave feedback, all in one place.
       </p>
     </td></tr>
     <tr><td style="padding:28px 40px 0 40px;">
@@ -106,7 +106,7 @@ export function renderOnboardingEmail(args: OnboardingEmailArgs): RenderedEmail 
         ${[
           "Sign in with the email and temporary password above.",
           `Your dashboard shows every active project for <span style="color:#FFFFFF;">${escapeHtml(args.companyName)}</span>.`,
-          "When we publish new work, review it — approve it or leave feedback right there.",
+          "When we publish new work, review it, then approve it or leave feedback right there.",
         ]
           .map(
             (step, i) => `
@@ -119,13 +119,13 @@ export function renderOnboardingEmail(args: OnboardingEmailArgs): RenderedEmail 
       </table>
       <p style="margin:4px 0 0 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#8F8F8F;">
         Tip: open that link on your phone and add it to your home screen for a
-        full-screen app — no App Store needed, and it still works offline.
+        full-screen app. No App Store needed, and it still works offline.
       </p>
     </td></tr>
     <tr><td style="padding:24px 40px 36px 40px;">
       <p style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.6;color:#8F8F8F;">
         Forgot your password later? Use “Forgot password?” on the sign-in screen.
-        This portal is invite-only — access stays limited to your team.
+        This portal is invite-only and access stays limited to your team.
       </p>
     </td></tr>
     <tr><td style="padding:20px 40px;border-top:1px solid #1E1E1E;">
