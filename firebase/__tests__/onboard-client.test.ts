@@ -117,12 +117,13 @@ describe("onboardClient", () => {
       displayName: "Jamie Lin",
       companyName: "Lin Media",
       tempPassword: "ABCDE-FGHIJ-KLMNO-PQRST",
+      loginUrl: "https://portal.example.test/login",
     });
     expect(subject).toMatch(/voltair/i);
     expect(html).toContain("#FF4F00");
     expect(html).toContain("#0A0A0A");
     expect(html).toContain("ABCDE-FGHIJ-KLMNO-PQRST");
-    expect(html).toContain("https://portal.voltairstudio.com/login");
+    expect(html).toContain("https://portal.example.test/login");
     expect(text).toContain("ABCDE-FGHIJ-KLMNO-PQRST");
   });
 });
