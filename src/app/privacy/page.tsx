@@ -48,7 +48,7 @@ export default function PrivacyPage() {
         <p>
           This policy explains how {OPERATOR} (&ldquo;Voltair Studio&rdquo;, &ldquo;we&rdquo;)
           handles personal data in the Voltair Studio client portal — the web app at{" "}
-          <span className="text-ink">portalvoltairstudio.vercel.app</span> and its iOS and
+          <span className="text-ink">portalvoltairstudio.com</span> and its iOS and
           Android apps, which load that same site.
         </p>
         <p>

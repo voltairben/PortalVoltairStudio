@@ -18,9 +18,7 @@ export interface RenderedEmail {
   text: string;
 }
 
-// portal.voltairstudio.com has no DNS record yet (only the Resend sending
-// subdomains exist) — fall back to the domain that's actually live.
-const DEFAULT_LOGIN_URL = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://portalvoltairstudio.vercel.app"}/login`;
+const DEFAULT_LOGIN_URL = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://portalvoltairstudio.com"}/login`;
 
 export function renderAdminInviteEmail(args: AdminInviteEmailArgs): RenderedEmail {
   const loginUrl = args.loginUrl ?? DEFAULT_LOGIN_URL;

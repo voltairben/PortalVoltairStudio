@@ -17,9 +17,7 @@ import {
   type Project,
 } from "@/types";
 
-// portal.voltairstudio.com has no DNS record yet — fall back to the domain
-// that's actually live.
-const appUrl = () => process.env.NEXT_PUBLIC_APP_URL ?? "https://portalvoltairstudio.vercel.app";
+const appUrl = () => process.env.NEXT_PUBLIC_APP_URL ?? "https://portalvoltairstudio.com";
 
 // ---------------------------------------------------------------------------
 // Client: approve / request changes
