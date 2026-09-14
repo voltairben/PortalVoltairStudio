@@ -10,12 +10,17 @@ export const metadata: Metadata = {
 // BEFORE PUBLISHING TO THE APP STORES, replace every [BRACKETED] value below with
 // your real details, set EFFECTIVE_DATE, and have the result reviewed. This copy
 // is accurate to what the software does; it is not legal advice.
+//
+// STILL PENDING (2026-09-14): KvK registration. OPERATOR/KVK/EFFECTIVE_DATE stay
+// bracketed until that's done — filling EFFECTIVE_DATE now would date a policy
+// that isn't actually final yet. CONTACT_EMAIL is real (contact@voltairstudio.com);
+// OPERATOR_ADDRESS is intentionally omitted — see remaining-work memory for why
+// (KVK number already lets anyone look up the registered address).
 // ─────────────────────────────────────────────────────────────────────────────
 const OPERATOR = "[Voltair Studio — legal entity name]";
-const OPERATOR_ADDRESS = "[street, postal code, city, Netherlands]";
 const KVK = "[KVK number]";
-const CONTACT_EMAIL = "[privacy@voltairstudio.com]";
-const EFFECTIVE_DATE = "[10 September 2026]";
+const CONTACT_EMAIL = "contact@voltairstudio.com";
+const EFFECTIVE_DATE = "[pending KvK registration]";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -196,8 +201,6 @@ export default function PrivacyPage() {
       <Section title="Contact">
         <p>
           {OPERATOR}
-          <br />
-          {OPERATOR_ADDRESS}
           <br />
           KVK {KVK}
           <br />
